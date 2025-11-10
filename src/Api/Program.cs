@@ -1,32 +1,16 @@
-using Core.Interfaces;
-using Infrastructure.Data;
-using Infrastructure.Repositories;
-using Infrastructure.Email;
-using Infrastructure.Background;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1️⃣ Configure DB connection (EF Core)
+// Add DbContext
 builder.Services.AddDbContext<MessagingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2️⃣ Register services (Dependency Injection)
-builder.Services.AddScoped<IMessageService, MessageService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEmailSender, ConsoleEmailSender>();
-builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
-
-// 3️⃣ Add background worker for delayed email alerts
-builder.Services.AddHostedService<EmailAlertWorker>();
-
-// 4️⃣ JWT Authentication config
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "SuperSecretKey12345";
-var keyBytes = Encoding.ASCII.GetBytes(jwtKey);
-
+var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -36,26 +20,35 @@ builder.Services.AddAuthentication(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = false,
-        ValidateAudience = false,
+        ValidateIssuer = true,
+        ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!))
     };
 });
 
-// 5️⃣ Controller + Swagger
+builder.Services.AddAuthorization();
+
+// Add Controllers + Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
 
+app.UseHttpsRedirection();
+app.MapControllers();
 app.Run();

@@ -1,34 +1,32 @@
 using Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Data;
-
-public class MessagingDbContext : DbContext
+namespace Infrastructure.Data
 {
-    public MessagingDbContext(DbContextOptions<MessagingDbContext> options) : base(options) {}
-
-    public DbSet<User> Users => Set<User>();
-    public DbSet<Message> Messages => Set<Message>();
-    public DbSet<Subscription> Subscriptions => Set<Subscription>();
-
-    protected override void OnModelCreating(ModelBuilder builder)
+    public class MessagingDbContext : DbContext
     {
-        base.OnModelCreating(builder);
+        public MessagingDbContext(DbContextOptions<MessagingDbContext> options)
+            : base(options) { }
 
-        builder.Entity<User>()
-            .HasIndex(u => u.Email)
-            .IsUnique();
+        public DbSet<User> Users => Set<User>();
+        public DbSet<Message> Messages => Set<Message>();
+        public DbSet<Subscription> Subscriptions => Set<Subscription>();
 
-        builder.Entity<Message>()
-            .HasOne(m => m.Sender)
-            .WithMany(u => u.SentMessages)
-            .HasForeignKey(m => m.SenderId)
-            .OnDelete(DeleteBehavior.Restrict);
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
 
-        builder.Entity<Message>()
-            .HasOne(m => m.Receiver)
-            .WithMany(u => u.ReceivedMessages)
-            .HasForeignKey(m => m.ReceiverId)
-            .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany(u => u.Messages)
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
