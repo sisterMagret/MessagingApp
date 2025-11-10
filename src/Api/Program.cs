@@ -3,6 +3,10 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Core.Interfaces;
+using Core.Contracts;
+using Infrastructure.Services;
+using Infrastructure.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +35,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IEmailSender, ConsoleEmailSender>();
+
 
 // Add Controllers + Swagger
 builder.Services.AddControllers();
