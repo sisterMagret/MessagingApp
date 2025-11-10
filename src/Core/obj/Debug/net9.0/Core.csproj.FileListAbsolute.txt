@@ -1,6 +1,7 @@
 /Users/admin/Documents/MessagingApp/src/Core/bin/Debug/net9.0/Core.deps.json
 /Users/admin/Documents/MessagingApp/src/Core/bin/Debug/net9.0/Core.dll
 /Users/admin/Documents/MessagingApp/src/Core/bin/Debug/net9.0/Core.pdb
+/Users/admin/Documents/MessagingApp/src/Core/obj/Debug/net9.0/Core.csproj.AssemblyReference.cache
 /Users/admin/Documents/MessagingApp/src/Core/obj/Debug/net9.0/Core.GeneratedMSBuildEditorConfig.editorconfig
 /Users/admin/Documents/MessagingApp/src/Core/obj/Debug/net9.0/Core.AssemblyInfoInputs.cache
 /Users/admin/Documents/MessagingApp/src/Core/obj/Debug/net9.0/Core.AssemblyInfo.cs

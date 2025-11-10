@@ -10,47 +10,52 @@ namespace Api.Controllers
     [Authorize]
     public class MessagesController : ControllerBase
     {
-        private readonly IMessageService _messages;
+        private readonly IMessageService _messageService;
 
-        public MessagesController(IMessageService messages)
+        public MessagesController(IMessageService messageService)
         {
-            _messages = messages;
+            _messageService = messageService;
         }
 
         // POST api/messages
         [HttpPost]
-        public async Task<IActionResult> Send([FromBody] MessageCreateRequest request)
+        public async Task<IActionResult> SendMessage([FromBody] MessageCreateRequest request)
         {
-            // parse sender id from JWT claims
-            var nameId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(nameId, out var senderId))
+            if (request is null)
+                return BadRequest("Request cannot be null.");
+
+            if (string.IsNullOrWhiteSpace(request.Content))
+                return BadRequest("Message content cannot be empty.");
+
+            var senderIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(senderIdClaim, out var senderId))
                 return Unauthorized();
 
-            var dto = await _messages.SendAsync(senderId, request);
-            return Ok(dto);
+            var message = await _messageService.SendAsync(senderId, request);
+            return Ok(message);
         }
 
         // GET api/messages/inbox?page=1&pageSize=50
         [HttpGet("inbox")]
-        public async Task<IActionResult> Inbox([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> GetInbox([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var nameId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(nameId, out var userId))
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
-            var messages = await _messages.GetInboxAsync(userId, page, pageSize);
-            return Ok(messages);
+            var inbox = await _messageService.GetInboxAsync(userId, page, pageSize);
+            return Ok(inbox);
         }
 
         // POST api/messages/{id}/read
         [HttpPost("{id}/read")]
-        public async Task<IActionResult> MarkRead([FromRoute] int id)
+        public async Task<IActionResult> MarkAsRead([FromRoute] int id)
         {
-            var nameId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(nameId, out var userId))
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
-            await _messages.MarkAsReadAsync(userId, id);
+            await _messageService.MarkAsReadAsync(userId, id);
             return NoContent();
         }
     }

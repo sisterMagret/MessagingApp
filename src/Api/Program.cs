@@ -3,10 +3,13 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Core.Interfaces;
 using Core.Contracts;
+using Api.Hubs;
 using Infrastructure.Services;
 using Infrastructure.Email;
+using Core.Interfaces;
+using Api.Services;
+using Infrastructure.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +40,26 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IEmailSender, ConsoleEmailSender>();
+builder.Services.AddScoped<INotificationService, SignalRNotificationService>();
+builder.Services.AddHostedService<EmailAlertWorker>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddMemoryCache();
 
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials()
+              .WithOrigins("http://localhost:3000");
+    });
+});
+
+
+builder.Services.AddSignalR();
 
 // Add Controllers + Swagger
 builder.Services.AddControllers();
@@ -55,6 +77,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors();
+app.MapHub<MessageHub>("/hubs/messages");
 
 app.UseHttpsRedirection();
 app.MapControllers();
