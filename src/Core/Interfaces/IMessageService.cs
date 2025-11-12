@@ -7,5 +7,6 @@ namespace Core.Interfaces
         Task<MessageDto> SendAsync(int senderId, MessageCreateRequest request);
         Task<PagedResult<MessageDto>> GetInboxAsync(int userId, int page, int pageSize);
         Task MarkAsReadAsync(int userId, int messageId);
+        Task<List<MessageDto>> GetGroupMessagesAsync(int groupId, int userId);
     }
 }

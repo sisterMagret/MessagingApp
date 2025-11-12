@@ -33,16 +33,17 @@ namespace Infrastructure.Workers
                     using var scope = _scopeFactory.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<MessagingDbContext>();
                     var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
-                    var notifier = scope.ServiceProvider.GetRequiredService<INotificationService>();
                     var subscriptionService = scope.ServiceProvider.GetRequiredService<ISubscriptionService>();
 
                     var cutoff = DateTime.UtcNow - _unreadThreshold;
 
                     var unreadMessages = await db.Messages
+                        .Include(m => m.Sender)
                         .Include(m => m.Receiver)
                         .Where(m => !m.IsRead &&
                                     m.SentAt <= cutoff &&
-                                    (m.LastNotifiedAt == null || m.LastNotifiedAt < cutoff))
+                                    (m.LastNotifiedAt == null || m.LastNotifiedAt < cutoff) &&
+                                    m.ReceiverId != null) // Only direct messages
                         .ToListAsync(stoppingToken);
 
                     foreach (var message in unreadMessages)
@@ -50,21 +51,18 @@ namespace Infrastructure.Workers
                         try
                         {
                             // Only notify if user has EmailAlerts subscription
-                            if (!await subscriptionService.HasActiveFeatureAsync(message.ReceiverId, FeatureType.EmailAlerts))
+                            if (!await subscriptionService.HasActiveFeatureAsync(message.ReceiverId!.Value, FeatureType.EmailAlerts))
                                 continue;
 
                             await emailSender.SendEmailAsync(
                                 message.Receiver.Email,
                                 "Unread Message Reminder",
-                                $"You have an unread message from user {message.SenderId}"
-                            );
-
-                            await notifier.NotifyUserAsync(
-                                message.ReceiverId.ToString(),
-                                $"You have an unread message from user {message.SenderId}"
+                                $"You have an unread message from {message.Sender.Email}: {message.Content.Truncate(100)}"
                             );
 
                             message.LastNotifiedAt = DateTime.UtcNow;
+                            _logger.LogInformation("Sent email alert for message {MessageId} to user {UserId}", 
+                                message.Id, message.ReceiverId);
                         }
                         catch (Exception ex)
                         {
@@ -75,6 +73,8 @@ namespace Infrastructure.Workers
 
                     if (unreadMessages.Any())
                         await db.SaveChangesAsync(stoppingToken);
+
+                    _logger.LogInformation("Processed {Count} unread messages for email alerts", unreadMessages.Count);
                 }
                 catch (Exception ex)
                 {
@@ -83,6 +83,15 @@ namespace Infrastructure.Workers
 
                 await Task.Delay(_interval, stoppingToken);
             }
+        }
+    }
+
+    public static class StringExtensions
+    {
+        public static string Truncate(this string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value.Length <= maxLength ? value : value[..maxLength] + "...";
         }
     }
 }

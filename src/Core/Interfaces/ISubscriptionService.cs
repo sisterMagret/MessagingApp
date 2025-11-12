@@ -1,19 +1,17 @@
+using Core.Entities;
 using Core.Enums;
-using System.Threading.Tasks;
 
 namespace Core.Interfaces
 {
     public interface ISubscriptionService
     {
-        /// <summary>
-        /// Checks if a user has an active subscription for a specific feature.
-        /// </summary>
         Task<bool> HasActiveFeatureAsync(int userId, FeatureType feature);
-
-
-        /// <summary>
-        /// Grants (creates or extends) a subscription for a given feature.
-        /// </summary>
         Task GrantAsync(int userId, FeatureType feature, TimeSpan duration);
+        Task<bool> PurchaseFeatureAsync(int userId, FeatureType feature, int months);
+        Task<bool> RevokeAsync(int userId, FeatureType feature);
+        Task<IEnumerable<Subscription>> GetUserSubscriptionsAsync(int userId);
+        Task<Subscription?> GetUserSubscriptionAsync(int userId, FeatureType feature);
+        Task<IEnumerable<Subscription>> GetExpiringSubscriptionsAsync(TimeSpan within);
+        Task CleanExpiredSubscriptionsAsync();
     }
 }

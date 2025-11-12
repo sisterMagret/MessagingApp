@@ -1,3 +1,11 @@
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.csproj.AssemblyReference.cache
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.GeneratedMSBuildEditorConfig.editorconfig
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.AssemblyInfoInputs.cache
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.AssemblyInfo.cs
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.csproj.CoreCompileInputs.cache
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.MvcApplicationPartsAssemblyInfo.cs
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.MvcApplicationPartsAssemblyInfo.cache
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.sourcelink.json
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.abstractions.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/appsettings.Development.json
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/appsettings.json
@@ -14,14 +22,7 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/FluentValidation.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Humanizer.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.Connections.Abstractions.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.Http.Connections.Client.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.Http.Connections.Common.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.OpenApi.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.SignalR.Client.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.SignalR.Client.Core.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.SignalR.Common.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.SignalR.Protocols.Json.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Bcl.AsyncInterfaces.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Build.Locator.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.CodeAnalysis.dll
@@ -43,7 +44,6 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.DependencyInjection.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.DependencyModel.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.Features.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.Logging.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.Logging.Abstractions.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.Options.dll
@@ -77,13 +77,11 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Formats.Asn1.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Memory.Data.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Net.ServerSentEvents.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Net.WebSockets.WebSocketProtocol.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Runtime.Caching.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Security.Cryptography.ProtectedData.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Security.Permissions.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Text.Json.dll
-/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Threading.Channels.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Windows.Extensions.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.assert.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.core.dll
@@ -169,13 +167,6 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Infrastructure.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Core.pdb
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Infrastructure.pdb
-/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.csproj.AssemblyReference.cache
-/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.GeneratedMSBuildEditorConfig.editorconfig
-/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.AssemblyInfoInputs.cache
-/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.AssemblyInfo.cs
-/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.csproj.CoreCompileInputs.cache
-/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.MvcApplicationPartsAssemblyInfo.cs
-/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.MvcApplicationPartsAssemblyInfo.cache
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/scopedcss/bundle/Api.styles.css
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/staticwebassets.build.json
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/staticwebassets.build.json.cache
@@ -187,3 +178,4 @@
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.pdb
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.genruntimeconfig.cache
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/ref/Api.dll
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Api.staticwebassets.runtime.json
