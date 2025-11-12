@@ -46,7 +46,6 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddMemoryCache();
 
 
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>

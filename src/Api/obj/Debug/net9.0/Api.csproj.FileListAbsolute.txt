@@ -1,6 +1,8 @@
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.abstractions.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/appsettings.Development.json
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/appsettings.json
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Api.staticwebassets.endpoints.json
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.runner.visualstudio.testadapter.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Api
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Api.deps.json
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Api.runtimeconfig.json
@@ -8,6 +10,7 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Api.pdb
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Azure.Core.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Azure.Identity.dll
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Castle.Core.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/FluentValidation.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Humanizer.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
@@ -31,6 +34,7 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.Abstractions.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.Design.dll
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.InMemory.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.Relational.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.SqlServer.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Extensions.Caching.Abstractions.dll
@@ -56,6 +60,7 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.SqlServer.Server.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Microsoft.Win32.SystemEvents.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Mono.TextTemplating.dll
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Moq.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Newtonsoft.Json.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
@@ -80,6 +85,9 @@
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Text.Json.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Threading.Channels.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/System.Windows.Extensions.dll
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.assert.dll
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.core.dll
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/xunit.execution.dotnet.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/cs/Microsoft.CodeAnalysis.resources.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/de/Microsoft.CodeAnalysis.resources.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/es/Microsoft.CodeAnalysis.resources.dll
