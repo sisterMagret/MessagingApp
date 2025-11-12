@@ -2014,7 +2014,7 @@
           }
         }
       },
-      "Microsoft.OpenApi/1.6.22": {
+      "Microsoft.OpenApi/1.6.14": {
         "type": "package",
         "compile": {
           "lib/netstandard2.0/Microsoft.OpenApi.dll": {
@@ -6135,10 +6135,10 @@
         "microsoft.net.http.headers.nuspec"
       ]
     },
-    "Microsoft.OpenApi/1.6.22": {
-      "sha512": "aBvunmrdu/x+4CaA/UP1Jx4xWGwk4kymhoIRnn2Vp+zi5/KOPQJ9EkSXHRUr01WcGKtYl3Au7XfkPJbU1G2sjQ==",
+    "Microsoft.OpenApi/1.6.14": {
+      "sha512": "tTaBT8qjk3xINfESyOPE2rIellPvB7qpVqiWiyA/lACVvz+xOGiXhFUfohcx82NLbi5avzLW0lx+s6oAqQijfw==",
       "type": "package",
-      "path": "microsoft.openapi/1.6.22",
+      "path": "microsoft.openapi/1.6.14",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -6146,7 +6146,7 @@
         "lib/netstandard2.0/Microsoft.OpenApi.dll",
         "lib/netstandard2.0/Microsoft.OpenApi.pdb",
         "lib/netstandard2.0/Microsoft.OpenApi.xml",
-        "microsoft.openapi.1.6.22.nupkg.sha512",
+        "microsoft.openapi.1.6.14.nupkg.sha512",
         "microsoft.openapi.nuspec"
       ]
     },
@@ -7878,6 +7878,7 @@
       "Microsoft.EntityFrameworkCore.Design >= 9.0.10",
       "Microsoft.EntityFrameworkCore.InMemory >= 9.0.10",
       "Microsoft.Extensions.Logging.Abstractions >= 9.0.10",
+      "Microsoft.OpenApi >= 1.6.14",
       "Moq >= 4.20.72",
       "Swashbuckle.AspNetCore >= 7.0.0",
       "xunit >= 2.9.0",
@@ -7960,6 +7961,10 @@
             "target": "Package",
             "version": "[9.0.10, )"
           },
+          "Microsoft.OpenApi": {
+            "target": "Package",
+            "version": "[1.6.14, )"
+          },
           "Moq": {
             "target": "Package",
             "version": "[4.20.72, )"
@@ -8001,5 +8006,16 @@
         "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1605",
+      "level": "Error",
+      "message": "Warning As Error: Detected package downgrade: Microsoft.OpenApi from 1.6.17 to 1.6.14. Reference the package directly from the project to select a different version. \n Api -> Microsoft.AspNetCore.OpenApi 9.0.0 -> Microsoft.OpenApi (>= 1.6.17) \n Api -> Microsoft.OpenApi (>= 1.6.14)",
+      "libraryId": "Microsoft.OpenApi",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
 }
