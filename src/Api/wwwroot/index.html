@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messaging App</title>
+    <link href="styles.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>💬 Messaging App</h1>
+            <div class="user-info">
+                <span id="current-user"></span>
+                <button id="logout-btn" class="btn btn-secondary" style="display: none;">Logout</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Login/Register Section -->
+            <section id="auth-section" class="section">
+                <div class="auth-container">
+                    <div class="auth-tabs">
+                        <button id="login-tab" class="tab-btn active">Login</button>
+                        <button id="register-tab" class="tab-btn">Register</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div id="login-form" class="auth-form">
+                        <h2>Login to Your Account</h2>
+                        <form id="login-form-element">
+                            <div class="form-group">
+                                <label for="login-email">Email:</label>
+                                <input type="email" id="login-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Password:</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </form>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="register-form" class="auth-form" style="display: none;">
+                        <h2>Create New Account</h2>
+                        <form id="register-form-element">
+                            <div class="form-group">
+                                <label for="register-email">Email:</label>
+                                <input type="email" id="register-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Password:</label>
+                                <input type="password" id="register-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-confirm">Confirm Password:</label>
+                                <input type="password" id="register-confirm" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Register</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="section" style="display: none;">
+                <!-- Navigation Tabs -->
+                <nav class="nav-tabs">
+                    <button class="nav-tab active" data-tab="messages">📨 Messages</button>
+                    <button class="nav-tab" data-tab="groups">👥 Groups</button>
+                    <button class="nav-tab" data-tab="subscriptions">💰 Subscriptions</button>
+                    <button class="nav-tab" data-tab="files">📁 Files</button>
+                </nav>
+
+                <!-- Messages Tab -->
+                <div id="messages-tab" class="tab-content active">
+                    <div class="tab-header">
+                        <h2>Messages</h2>
+                        <button id="compose-message-btn" class="btn btn-primary">✉️ New Message</button>
+                    </div>
+
+                    <!-- Compose Message Modal -->
+                    <div id="compose-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Compose Message</h3>
+                                <span class="close">&times;</span>
+                            </div>
+                            <form id="compose-form">
+                                <div class="form-group">
+                                    <label>Message Type:</label>
+                                    <select id="message-type">
+                                        <option value="direct">Direct Message</option>
+                                        <option value="group">Group Message</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="recipient-group">
+                                    <label for="recipient-id">Recipient ID:</label>
+                                    <input type="number" id="recipient-id" placeholder="Enter user ID">
+                                </div>
+                                <div class="form-group" id="group-select-group" style="display: none;">
+                                    <label for="group-select">Select Group:</label>
+                                    <select id="group-select"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="message-content">Message:</label>
+                                    <textarea id="message-content" rows="4" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="message-file">Attach File (optional):</label>
+                                    <input type="file" id="message-file">
+                                </div>
+                                <div class="modal-actions">
+                                    <button type="submit" class="btn btn-primary">Send Message</button>
+                                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Messages List -->
+                    <div class="messages-container">
+                        <div class="inbox-header">
+                            <h3>Inbox</h3>
+                            <button id="refresh-messages" class="btn btn-secondary">🔄 Refresh</button>
+                        </div>
+                        <div id="messages-list" class="messages-list">
+                            <p class="loading">Loading messages...</p>
+                        </div>
+                        <div class="pagination">
+                            <button id="prev-page" class="btn btn-secondary">← Previous</button>
+                            <span id="page-info">Page 1</span>
+                            <button id="next-page" class="btn btn-secondary">Next →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups Tab -->
+                <div id="groups-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h2>Group Chats</h2>
+                        <button id="create-group-btn" class="btn btn-primary">➕ Create Group</button>
+                    </div>
+
+                    <!-- Create Group Modal -->
+                    <div id="group-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Create New Group</h3>
+                                <span class="close">&times;</span>
+                            </div>
+                            <form id="create-group-form">
+                                <div class="form-group">
+                                    <label for="group-name">Group Name:</label>
+                                    <input type="text" id="group-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="group-description">Description:</label>
+                                    <textarea id="group-description" rows="3"></textarea>
+                                </div>
+                                <div class="modal-actions">
+                                    <button type="submit" class="btn btn-primary">Create Group</button>
+                                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Groups List -->
+                    <div id="groups-list" class="groups-list">
+                        <p class="loading">Loading groups...</p>
+                    </div>
+
+                    <!-- Group Details -->
+                    <div id="group-details" class="group-details" style="display: none;">
+                        <div class="group-header">
+                            <button class="btn btn-secondary" id="back-to-groups">← Back to Groups</button>
+                            <h3 id="group-title"></h3>
+                        </div>
+                        <div class="group-info">
+                            <p id="group-description-text"></p>
+                            <div class="group-actions">
+                                <button id="add-member-btn" class="btn btn-primary">➕ Add Member</button>
+                            </div>
+                        </div>
+                        <div class="group-members">
+                            <h4>Members</h4>
+                            <div id="members-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscriptions Tab -->
+                <div id="subscriptions-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h2>Subscriptions</h2>
+                        <button id="refresh-subscriptions" class="btn btn-secondary">🔄 Refresh</button>
+                    </div>
+
+                    <!-- Subscription Summary -->
+                    <div class="subscription-summary">
+                        <h3>Your Subscription Status</h3>
+                        <div id="subscription-info" class="subscription-cards">
+                            <p class="loading">Loading subscription information...</p>
+                        </div>
+                    </div>
+
+                    <!-- Available Plans -->
+                    <div class="available-plans">
+                        <h3>Available Features</h3>
+                        <div id="plans-list" class="plans-grid">
+                            <p class="loading">Loading available plans...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Files Tab -->
+                <div id="files-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h2>File Management</h2>
+                        <button id="upload-file-btn" class="btn btn-primary">📤 Upload File</button>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="file-upload-section">
+                        <form id="file-upload-form" style="display: none;">
+                            <div class="form-group">
+                                <label for="file-input">Select File:</label>
+                                <input type="file" id="file-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="file-description">Description (optional):</label>
+                                <input type="text" id="file-description" placeholder="Enter file description">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Upload</button>
+                                <button type="button" class="btn btn-secondary" id="cancel-upload">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- File List -->
+                    <div id="files-list" class="files-list">
+                        <p>File management features will be available here.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Notifications -->
+        <div id="notifications" class="notifications"></div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

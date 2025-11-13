@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Core.Entities;
 using Core.Enums;
+using Microsoft.Extensions.Configuration;
 
 namespace Tests
 {

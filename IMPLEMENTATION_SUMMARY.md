@@ -21,6 +21,7 @@ A full-featured messaging application built with **C# .NET 9**, **ASP.NET Core**
 ## **🚀 Quick Start**
 
 ### **1. Prerequisites**
+
 ```bash
 # Install .NET 9
 brew install dotnet
@@ -30,6 +31,7 @@ brew install docker
 ```
 
 ### **2. Start SQL Server**
+
 ```bash
 docker run -e "ACCEPT_EULA=Y" \
   -e "MSSQL_SA_PASSWORD=P@ssw0rd2024" \
@@ -39,6 +41,7 @@ docker run -e "ACCEPT_EULA=Y" \
 ```
 
 ### **3. Run the Application**
+
 ```bash
 cd /Users/admin/Documents/MessagingApp
 dotnet restore
@@ -46,13 +49,15 @@ dotnet run --project src/Api
 ```
 
 ### **4. Access Swagger UI**
-Open: **http://localhost:5250/swagger**
+
+Open: **<http://localhost:5250/swagger>**
 
 ---
 
 ## **🏗️ Architecture**
 
 ### **Project Structure**
+
 ```
 src/
 ├── Api/                    # HTTP API Layer (Controllers)
@@ -106,6 +111,7 @@ var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 ```
 
 **Mapping to Django:**
+
 - Django uses `django-rest-framework-simplejwt`
 - C# uses built-in `System.IdentityModel.Tokens.Jwt`
 - Both: stateless, expiring tokens with encoded user identity
@@ -115,12 +121,14 @@ var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 ## **💰 Payment & Subscription System**
 
 ### **Feature Tiers**
+
 - **VoiceMessage**: $2.99/month
 - **FileSharing**: $4.99/month  
 - **GroupChat**: $9.99/month
 - **EmailAlerts**: $1.99/month (included with premium)
 
 ### **Purchase Flow**
+
 ```csharp
 // 1. User purchases feature
 POST /api/payments/purchase
@@ -148,6 +156,7 @@ POST /api/messages
 ```
 
 ### **Feature Gating Implementation**
+
 ```csharp
 public async Task<MessageDto> SendAsync(int senderId, MessageCreateRequest request)
 {
@@ -213,6 +222,7 @@ public override async Task ExecuteAsync(CancellationToken stoppingToken)
 ```
 
 **Logic:**
+
 1. **Instant**: If user is online and checks app → no email (they'll see it immediately)
 2. **30-minute wait**: If message unread after 30 minutes → send email
 3. **Once per 30-min**: Won't spam; only one email per message per 30-minute window
@@ -223,27 +233,32 @@ public override async Task ExecuteAsync(CancellationToken stoppingToken)
 ## **API Endpoints**
 
 ### **Authentication**
+
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/me` - Get current user info
 
 ### **Messaging**
+
 - `POST /api/messages` - Send message (direct or group)
 - `GET /api/messages/inbox` - Get inbox (paginated)
 - `POST /api/messages/{id}/read` - Mark message as read
 
 ### **Groups**
+
 - `POST /api/groups` - Create group (requires GroupChat feature)
 - `GET /api/groups` - List user's groups
 - `POST /api/groups/{id}/members` - Add member to group
 - `DELETE /api/groups/{id}/members/{userId}` - Remove member
 
 ### **Subscriptions**
+
 - `GET /api/subscriptions/has-feature/{feature}` - Check if user has feature
 - `GET /api/subscriptions/my-subscriptions` - List user's subscriptions
 - `GET /api/subscriptions/my-subscriptions/{feature}` - Get specific subscription
 
 ### **Payments**
+
 - `POST /api/payments/purchase` - Purchase a feature
 - `GET /api/payments/plans` - Get available plans
 
@@ -260,6 +275,7 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 ```
 
 **Relationships:**
+
 - Users → Messages (1:many) - User sends messages
 - Users → Messages (1:many) - User receives messages
 - Users → Groups (1:many) - User creates groups
@@ -290,18 +306,21 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 ### **Test Scenario: Alice Sends Voice Message to Bob**
 
 1. **Alice Registers**
+
    ```
    POST /api/auth/register
    alice@example.com / Alice@12345
    ```
 
 2. **Bob Registers**
+
    ```
    POST /api/auth/register
    bob@example.com / Bob@12345
    ```
 
 3. **Alice Tries Voice Message (No Subscription)**
+
    ```
    POST /api/messages
    { "voiceUrl": "...", "receiverId": 2 }
@@ -309,12 +328,14 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
    ```
 
 4. **Alice Purchases VoiceMessage**
+
    ```
    POST /api/payments/purchase
    { "feature": 1, "months": 1, "amount": 2.99 }
    ```
 
 5. **Alice Sends Voice Message (Now Works)**
+
    ```
    POST /api/messages
    { "voiceUrl": "...", "receiverId": 2 }
@@ -322,6 +343,7 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
    ```
 
 6. **Bob Receives Message**
+
    ```
    GET /api/messages/inbox
    Response: Shows voice message from Alice
@@ -339,6 +361,7 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 ## **🎓 What You Learned**
 
 ### **C# Fundamentals**
+
 - ✅ Classes and properties (static typing)
 - ✅ Async/await (same as Python!)
 - ✅ LINQ for data queries
@@ -346,6 +369,7 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 - ✅ Attributes for validation and authorization
 
 ### **ASP.NET Core**
+
 - ✅ Controllers and routing
 - ✅ JWT authentication
 - ✅ Attribute-based authorization
@@ -353,6 +377,7 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 - ✅ Dependency injection container
 
 ### **Entity Framework Core**
+
 - ✅ DbContext (like Django ORM)
 - ✅ Migrations (like Django migrations)
 - ✅ Relationships (Foreign keys, navigation properties)
@@ -360,12 +385,14 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 - ✅ SaveChanges (transactions)
 
 ### **Database Design**
+
 - ✅ Normalization
 - ✅ Relationship modeling
 - ✅ Indexes and unique constraints
 - ✅ SQL Server specifics
 
 ### **Software Architecture**
+
 - ✅ SOLID principles
 - ✅ Clean code
 - ✅ Separation of concerns
@@ -391,7 +418,9 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 ## **📞 Troubleshooting**
 
 ### **JWT Key Error: "key has '224' bits"**
+
 **Solution:** JWT HS256 requires 32+ byte key
+
 ```json
 "Jwt": {
   "Key": "this-is-a-very-secure-secret-key-that-is-long-enough"
@@ -399,14 +428,18 @@ Subscriptions (Id, UserId, Feature, StartDate, EndDate, IsActive)
 ```
 
 ### **SQL Server Connection Failed**
+
 **Solution:** Ensure Docker container is running
+
 ```bash
 docker ps | grep sqlserver
 docker start sqlserver
 ```
 
 ### **Migration Failed**
+
 **Solution:** Drop and recreate database
+
 ```bash
 dotnet ef database drop --force
 dotnet ef database update

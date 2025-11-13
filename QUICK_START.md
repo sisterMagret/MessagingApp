@@ -23,6 +23,7 @@ dotnet run --project src/Api
 ### **Test 1: Register Users (2 min)**
 
 **User 1 - Alice**
+
 ```
 POST /api/auth/register
 {
@@ -30,9 +31,11 @@ POST /api/auth/register
   "password": "Alice@12345"
 }
 ```
+
 💾 Save: `ALICE_TOKEN` from response
 
 **User 2 - Bob**
+
 ```
 POST /api/auth/register
 {
@@ -40,6 +43,7 @@ POST /api/auth/register
   "password": "Bob@12345"
 }
 ```
+
 💾 Save: `BOB_TOKEN` from response
 
 ---
@@ -76,6 +80,7 @@ Authorization: Bearer BOB_TOKEN
 ### **Test 4: Feature Gating Demo**
 
 **Try voice message WITHOUT subscription:**
+
 ```
 POST /api/messages
 Authorization: Bearer ALICE_TOKEN
@@ -143,6 +148,7 @@ Authorization: Bearer ALICE_TOKEN
 ```
 
 Then:
+
 ```
 POST /api/groups
 Authorization: Bearer ALICE_TOKEN
@@ -214,10 +220,13 @@ Authorization: Bearer ALICE_TOKEN
 ## **🔍 Common Issues & Solutions**
 
 ### **Issue: JWT Key Error**
+
 ```
 IDX10720: key size must be greater than: '256' bits
 ```
+
 **Solution:** Key in `appsettings.json` must be 32+ characters
+
 ```json
 "Jwt": {
   "Key": "this-is-a-very-secure-secret-key-that-is-long-enough"
@@ -225,6 +234,7 @@ IDX10720: key size must be greater than: '256' bits
 ```
 
 ### **Issue: SQL Server Not Running**
+
 ```bash
 # Check status
 docker ps | grep sqlserver
@@ -239,6 +249,7 @@ docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=P@ssw0rd2024" \
 ```
 
 ### **Issue: Port 5250 Already In Use**
+
 ```bash
 # Find process on port 5250
 lsof -i :5250
@@ -254,24 +265,28 @@ kill -9 <PID>
 ## **🎓 Key Concepts**
 
 ### **Authentication**
+
 - Register: Creates new User with hashed password
 - Login: Validates password, returns 7-day JWT token
 - Token contains UserId + Email as claims
 - Each request must include: `Authorization: Bearer {token}`
 
 ### **Messages**
+
 - Direct: `receiverId` set, `groupId` null
 - Group: `groupId` set, `receiverId` null
 - Feature-gated: voice/file require active subscription
 - Read status tracked with `LastNotifiedAt` for alerts
 
 ### **Subscriptions**
+
 - Feature-specific (user can have multiple)
 - Min 1 month, max limited by business rules
 - Auto-checked before allowing feature use
 - Email alerts trigger after 30 min if unread
 
 ### **Email Alerts**
+
 - EmailAlertWorker runs every minute
 - Finds unread messages older than 30 minutes
 - Won't send more than once per 30-min window
@@ -297,6 +312,7 @@ kill -9 <PID>
 - ✅ SQL Server uses strong connection string with TrustServerCertificate
 
 **For production:**
+
 - [ ] Change JWT secret
 - [ ] Change SQL Server password
 - [ ] Enable HTTPS enforcement
@@ -308,18 +324,21 @@ kill -9 <PID>
 ## **🚀 Deployment**
 
 ### **Local Testing** (Current)
+
 ```bash
 dotnet run --project src/Api
 # http://localhost:5250/swagger
 ```
 
 ### **Production Build**
+
 ```bash
 dotnet publish -c Release --no-self-contained
 # Deploy to Azure App Service, AWS, etc.
 ```
 
 ### **Docker Deployment**
+
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:9.0 as build
 WORKDIR /app
@@ -337,6 +356,7 @@ ENTRYPOINT ["dotnet", "Api.dll"]
 ## **📞 Support**
 
 See `IMPLEMENTATION_SUMMARY.md` for:
+
 - Full architecture details
 - Database schema
 - SOLID principles explanation

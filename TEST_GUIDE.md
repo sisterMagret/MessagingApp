@@ -9,6 +9,7 @@ This guide covers **unit tests**, **integration tests**, and **end-to-end (E2E) 
 ## **Test Structure**
 
 ### **Unit Tests** (`src/Tests/Services/ServiceUnitTests.cs`)
+
 - Test individual services in isolation with mocked dependencies
 - Use InMemory database for fast execution
 - No HTTP layer involved
@@ -20,6 +21,7 @@ This guide covers **unit tests**, **integration tests**, and **end-to-end (E2E) 
   - ✅ PaymentService (process payment, calculate)
 
 ### **Integration/E2E Tests** (`src/Tests/Integration/EndToEndTests.cs`)
+
 - Test full HTTP request/response flows
 - Use WebApplicationFactory with InMemory database
 - Test middleware, routing, authentication
@@ -31,6 +33,7 @@ This guide covers **unit tests**, **integration tests**, and **end-to-end (E2E) 
   - ✅ Subscription management
 
 ### **Test Base & Fixtures** (`src/Tests/`)
+
 - `ServiceTestBase.cs`: Base class with helper methods, InMemory DB, mocks
 - `TestFactories.cs`: WebApplicationFactory, TestDataBuilder, MessagingAppClient
 
@@ -39,12 +42,14 @@ This guide covers **unit tests**, **integration tests**, and **end-to-end (E2E) 
 ## **🚀 Running Tests**
 
 ### **Option 1: Run All Tests**
+
 ```bash
 cd /Users/admin/Documents/MessagingApp
 dotnet test src/Tests/Tests.csproj
 ```
 
 **Expected Output:**
+
 ```
 Test Session started
   Determining projects to restore...
@@ -121,6 +126,7 @@ All tests passed! ✅
 ---
 
 ### **Option 2: Run Specific Test Class**
+
 ```bash
 # Run only AuthServiceTests
 dotnet test src/Tests/Tests.csproj --filter "ClassName=Tests.Services.AuthServiceTests"
@@ -135,6 +141,7 @@ dotnet test src/Tests/Tests.csproj --filter "ClassName=Tests.Services.Subscripti
 ---
 
 ### **Option 3: Run Specific Test Method**
+
 ```bash
 # Run one specific test
 dotnet test src/Tests/Tests.csproj --filter "Name=E2E_UserCanPurchaseFeatureAndSendVoiceMessage"
@@ -146,6 +153,7 @@ dotnet test src/Tests/Tests.csproj --filter "Name~Feature"
 ---
 
 ### **Option 4: Run with Code Coverage**
+
 ```bash
 # Install coverage tool (one time)
 dotnet tool install --global coverlet.console
@@ -162,6 +170,7 @@ open coverage/index.html
 ## **📊 Test Coverage Map**
 
 ### **Authentication Layer**
+
 ```
 ✅ User Registration
    ├─ Valid registration with unique email
@@ -176,6 +185,7 @@ open coverage/index.html
 ```
 
 ### **Messaging Layer**
+
 ```
 ✅ Direct Messages
    ├─ User A sends to User B
@@ -198,6 +208,7 @@ open coverage/index.html
 ```
 
 ### **Subscription Layer**
+
 ```
 ✅ Feature Granting
    ├─ Create new subscription
@@ -218,6 +229,7 @@ open coverage/index.html
 ```
 
 ### **Payment Layer**
+
 ```
 ✅ Payment Processing
    ├─ Valid token grants subscription
@@ -233,6 +245,7 @@ open coverage/index.html
 ```
 
 ### **User Flows (E2E)**
+
 ```
 ✅ Complete Feature Purchase Flow
    Register → Login → Check Feature (fail) → 
@@ -252,9 +265,11 @@ open coverage/index.html
 ## **🔍 Debugging Failed Tests**
 
 ### **Test Fails: Database State Issue**
+
 **Symptom:** `User already exists` error on second run
 
 **Solution:**
+
 ```bash
 # Clear all tests (InMemory databases are isolated per test)
 dotnet clean src/Tests/Tests.csproj
@@ -264,9 +279,11 @@ dotnet test src/Tests/Tests.csproj
 ---
 
 ### **Test Fails: Async/Await Issue**
+
 **Symptom:** `System.InvalidOperationException: A second operation started before previous operation completed`
 
 **Solution:** Ensure all database operations are awaited:
+
 ```csharp
 // ❌ Wrong
 var user = _context.Users.FirstOrDefault(u => u.Email == email);
@@ -278,9 +295,11 @@ var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 ---
 
 ### **Test Fails: JWT Token Not Recognized**
+
 **Symptom:** `401 Unauthorized` on protected endpoints
 
 **Solution:** Check token is passed correctly:
+
 ```csharp
 // Ensure token is extracted from response
 var token = authResponse.Token;
@@ -293,9 +312,11 @@ var message = await _client.GetAsync<MessageDto>("/api/messages/inbox", token);
 ---
 
 ### **Test Fails: Mock Not Working**
+
 **Symptom:** `NullReferenceException` on email sending
 
 **Solution:** Verify mock setup in ServiceTestBase:
+
 ```csharp
 // In constructor
 MockEmailSender = new Mock<IEmailSender>();
@@ -325,6 +346,7 @@ MockEmailSender
 ## **🎯 Test Naming Convention**
 
 All tests follow this pattern:
+
 ```csharp
 [Category]_[Scenario]_[Expected]
 
@@ -335,6 +357,7 @@ E2E_UserCanPurchaseFeatureAndSendVoiceMessage
 ```
 
 **Benefits:**
+
 - Self-documenting test purpose
 - Easy to find related tests
 - Clear assertions
@@ -344,6 +367,7 @@ E2E_UserCanPurchaseFeatureAndSendVoiceMessage
 ## **✅ Continuous Integration**
 
 ### **GitHub Actions Example**
+
 ```yaml
 name: Run Tests
 
@@ -371,6 +395,7 @@ jobs:
 ## **🔒 Security Testing**
 
 Tests verify:
+
 - ✅ JWT tokens expire after 7 days
 - ✅ Passwords are never returned in API responses
 - ✅ Feature gating prevents unauthorized access
@@ -454,6 +479,7 @@ public async Task E2E_UserCanPerformNewFlow()
 ## **📝 Test Statistics**
 
 **Current Test Suite:**
+
 - ✅ **40+ Tests** implemented
 - ✅ **5 Service test classes** with 26 test methods
 - ✅ **1 E2E test class** with 12+ scenarios
@@ -461,6 +487,7 @@ public async Task E2E_UserCanPerformNewFlow()
 - ✅ **< 10 seconds** total execution time
 
 **Coverage:**
+
 - ✅ AuthService: 100% coverage
 - ✅ SubscriptionService: 100% coverage
 - ✅ MessageService: 95% coverage (error paths)
@@ -473,6 +500,7 @@ public async Task E2E_UserCanPerformNewFlow()
 ## **🎓 Learning from Tests**
 
 Reading the tests teaches you:
+
 1. **How services work** - Test code shows correct usage patterns
 2. **API contracts** - E2E tests demonstrate request/response formats
 3. **Error handling** - Tests cover both success and failure paths
@@ -495,18 +523,20 @@ Reading the tests teaches you:
 ## **🔗 Running Tests with Your IDE**
 
 ### **Visual Studio (Windows)**
+
 - Open Test Explorer: `Test` → `Test Explorer`
 - Right-click test → `Run`
 
 ### **Visual Studio Code**
+
 - Install "Test Explorer UI" extension
 - Click test file, then test icon in margin
 
 ### **JetBrains Rider**
+
 - Open Tests window: `View` → `Tool Windows` → `Unit Tests`
 - Click green arrow to run
 
 ---
 
 **All tests ready to go! Run `dotnet test` to verify everything works.** ✅
-

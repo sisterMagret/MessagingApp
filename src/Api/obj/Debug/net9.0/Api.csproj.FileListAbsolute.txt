@@ -179,3 +179,7 @@
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/Api.genruntimeconfig.cache
 /Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/ref/Api.dll
 /Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/Api.staticwebassets.runtime.json
+/Users/admin/Documents/MessagingApp/src/Api/bin/Debug/net9.0/appsettings.Test.json
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/compressed/y67e8agija-dy50k2gv8f.gz
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/compressed/l9chvsax5z-ne53hhjen9.gz
+/Users/admin/Documents/MessagingApp/src/Api/obj/Debug/net9.0/compressed/q0xyrbf4ce-wxt3aca69t.gz

@@ -46,11 +46,11 @@ namespace Infrastructure.Services
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
-                throw new Exception("Invalid credentials.");
+                throw new UnauthorizedAccessException("Invalid credentials.");
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (result == PasswordVerificationResult.Failed)
-                throw new Exception("Invalid credentials.");
+                throw new UnauthorizedAccessException("Invalid credentials.");
 
             return GenerateToken(user);
         }

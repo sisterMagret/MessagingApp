@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/groups")]
     [Authorize]
-    public class GroupsController : ControllerBase
+    public class GroupChatController : ControllerBase
     {
         private readonly IGroupService _groupService;
 
-        public GroupsController(IGroupService groupService)
+        public GroupChatController(IGroupService groupService)
         {
             _groupService = groupService;
         }
