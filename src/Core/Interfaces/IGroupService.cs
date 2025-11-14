@@ -8,6 +8,7 @@ namespace Core.Interfaces
         Task<GroupDto> CreateGroupAsync(int userId, CreateGroupRequest request);
         Task AddMemberAsync(int groupId, int newMemberId, int currentUserId);
         Task RemoveMemberAsync(int groupId, int memberId, int currentUserId);
+        Task DeleteGroupAsync(int groupId, int currentUserId);
         Task<GroupDetailDto?> GetGroupAsync(int groupId);
         Task<List<GroupDto>> GetUserGroupsAsync(int userId);
         Task<List<MessageDto>> GetGroupMessagesAsync(int groupId, int userId);

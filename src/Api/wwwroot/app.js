@@ -66,6 +66,7 @@ function setupEventListeners() {
     document.getElementById('create-group-form').addEventListener('submit', handleCreateGroup);
     document.getElementById('back-to-groups').addEventListener('click', showGroupsList);
     document.getElementById('add-member-btn').addEventListener('click', showAddMemberModal);
+    document.getElementById('delete-group-btn').addEventListener('click', handleDeleteGroup);
     
     // Add member modal events (check if elements exist to avoid errors)
     const searchUserBtn = document.getElementById('search-user-btn');
@@ -550,25 +551,48 @@ async function showGroupDetails(groupId) {
         if (response.ok) {
             const group = await response.json();
             
+            // Set current group ID for getCurrentGroupId() function
+            currentGroupId = groupId;
+            
             document.getElementById('group-title').textContent = group.name;
             document.getElementById('group-description-text').textContent = group.description || 'No description';
             
             // Render members
             const membersContainer = document.getElementById('members-list');
+            const currentUserId = getCurrentUserId(); // Get current user ID
+            const isGroupOwner = group.createdById === currentUserId;
+            
             if (group.members && group.members.length > 0) {
-                membersContainer.innerHTML = group.members.map(member => `
+                membersContainer.innerHTML = group.members.map(member => {
+                    const roleName = getRoleName(member.role);
+                    const roleClass = roleName.toLowerCase();
+                    console.log(`Member: ${member.userEmail}, Role Number: ${member.role}, Role Name: ${roleName}`);
+                    return `
                     <div class="member-item">
                         <div class="member-info">
-                            <span>User ${member.userId}</span>
-                            <span class="member-role ${member.role.toLowerCase()}">${member.role}</span>
+                            <span>${member.userEmail}</span>
+                            <span class="member-role ${roleClass}">${roleName}</span>
                         </div>
-                        ${member.role !== 'Owner' ? `
+                        ${isGroupOwner && member.role !== 3 ? `
                             <button class="btn btn-danger" onclick="removeMember(${groupId}, ${member.userId})">Remove</button>
                         ` : ''}
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             } else {
                 membersContainer.innerHTML = '<p class="text-muted">No members found.</p>';
+            }
+            
+            // Show/hide management buttons based on ownership
+            const addMemberBtn = document.getElementById('add-member-btn');
+            const deleteGroupBtn = document.getElementById('delete-group-btn');
+            
+            if (isGroupOwner) {
+                addMemberBtn.style.display = 'inline-block';
+                deleteGroupBtn.style.display = 'inline-block';
+            } else {
+                addMemberBtn.style.display = 'none';
+                deleteGroupBtn.style.display = 'none';
             }
             
             // Show group details view
@@ -700,12 +724,69 @@ async function removeMember(groupId, userId) {
     }
 }
 
+async function handleDeleteGroup() {
+    const groupId = getCurrentGroupId();
+    if (!groupId) {
+        showNotification('Error: No group selected', 'error');
+        return;
+    }
+
+    const confirmDelete = confirm('Are you sure you want to delete this group? This action cannot be undone and will remove all group messages and members.');
+    if (!confirmDelete) {
+        return;
+    }
+
+    try {
+        showLoading(true);
+        const response = await fetch(`${API_BASE}/groups/${groupId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            showNotification('Group deleted successfully!', 'success');
+            showGroupsList(); // Go back to groups list
+            loadGroups(); // Refresh groups list
+        } else {
+            const error = await response.text();
+            showNotification(error || 'Failed to delete group', 'error');
+        }
+    } catch (error) {
+        showNotification('Error deleting group', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Global variable to track current group ID
+let currentGroupId = null;
+
 function getCurrentGroupId() {
-    // This is a simple way to track the current group ID
-    // In a more complex app, you'd have proper state management
-    const groupTitle = document.getElementById('group-title').textContent;
-    const group = groups.find(g => g.name === groupTitle);
-    return group ? group.id : null;
+    return currentGroupId;
+}
+
+function getCurrentUserId() {
+    // Parse JWT token to get user ID
+    if (!authToken) return null;
+    
+    try {
+        const payload = JSON.parse(atob(authToken.split('.')[1]));
+        return parseInt(payload.sub);
+    } catch (error) {
+        console.error('Error parsing token:', error);
+        return null;
+    }
+}
+
+function getRoleName(roleNumber) {
+    switch(roleNumber) {
+        case 1: return 'Member';
+        case 2: return 'Admin';
+        case 3: return 'Owner';
+        default: return 'Unknown';
+    }
 }
 
 // ==================== SUBSCRIPTION FUNCTIONS ====================

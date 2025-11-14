@@ -149,13 +149,19 @@ namespace Infrastructure.Services
 
         public async Task RemoveMemberAsync(int groupId, int memberId, int currentUserId)
         {
-            // Check if current user is admin/owner
-            var currentUserMember = await _context.GroupMembers
-                .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == currentUserId);
+            // Check if the group exists and get the creator
+            var group = await _context.Groups
+                .FirstOrDefaultAsync(g => g.Id == groupId);
 
-            if (currentUserMember == null || (currentUserMember.Role != GroupRole.Admin && currentUserMember.Role != GroupRole.Owner))
+            if (group == null)
             {
-                throw new UnauthorizedAccessException("You don't have permission to remove members from this group.");
+                throw new ArgumentException("Group not found.");
+            }
+
+            // Only the group creator (owner) can remove members
+            if (group.CreatedById != currentUserId)
+            {
+                throw new UnauthorizedAccessException("Only the group creator can remove members from this group.");
             }
 
             var memberToRemove = await _context.GroupMembers
@@ -220,6 +226,41 @@ namespace Infrastructure.Services
                     MemberCount = g.Members.Count()
                 })
                 .ToListAsync();
+        }
+
+        public async Task DeleteGroupAsync(int groupId, int currentUserId)
+        {
+            // Check if the group exists and get the creator
+            var group = await _context.Groups
+                .Include(g => g.Members)
+                .FirstOrDefaultAsync(g => g.Id == groupId);
+
+            if (group == null)
+            {
+                throw new ArgumentException("Group not found.");
+            }
+
+            // Only the group creator (owner) can delete the group
+            if (group.CreatedById != currentUserId)
+            {
+                throw new UnauthorizedAccessException("Only the group creator can delete this group.");
+            }
+
+            // Remove all group members first
+            _context.GroupMembers.RemoveRange(group.Members);
+
+            // Remove all group messages
+            var groupMessages = await _context.Messages
+                .Where(m => m.GroupId == groupId)
+                .ToListAsync();
+            _context.Messages.RemoveRange(groupMessages);
+
+            // Remove the group itself
+            _context.Groups.Remove(group);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Group {GroupId} deleted by user {CurrentUserId}", groupId, currentUserId);
         }
     }
 }

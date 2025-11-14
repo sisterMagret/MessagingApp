@@ -80,8 +80,19 @@ namespace Api.Controllers
                 return StatusCode(403, "Group chat feature requires a subscription. Please subscribe to the Group Chat plan.");
             }
 
-            await _groupService.AddMemberAsync(groupId, userId, currentUserId);
-            return NoContent();
+            try
+            {
+                await _groupService.AddMemberAsync(groupId, userId, currentUserId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("already a member"))
+            {
+                return BadRequest("User is already a member of this group.");
+            }
+            catch (ArgumentException ex) when (ex.Message.Contains("not found"))
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpDelete("{groupId}/members/{userId}")]
@@ -98,8 +109,48 @@ namespace Api.Controllers
                 return StatusCode(403, "Group chat feature requires a subscription. Please subscribe to the Group Chat plan.");
             }
 
-            await _groupService.RemoveMemberAsync(groupId, userId, currentUserId);
-            return NoContent();
+            try
+            {
+                await _groupService.RemoveMemberAsync(groupId, userId, currentUserId);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpDelete("{groupId}")]
+        public async Task<IActionResult> DeleteGroup([FromRoute] int groupId)
+        {
+            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(currentUserIdClaim, out var currentUserId))
+                return Unauthorized();
+
+            // Check if user has Group Chat subscription
+            var hasGroupChat = await _subscriptionService.HasActiveFeatureAsync(currentUserId, FeatureType.GroupChat);
+            if (!hasGroupChat)
+            {
+                return StatusCode(403, "Group chat feature requires a subscription. Please subscribe to the Group Chat plan.");
+            }
+
+            try
+            {
+                await _groupService.DeleteGroupAsync(groupId, currentUserId);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
     }
 }

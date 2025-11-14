@@ -411,6 +411,11 @@ body {
     color: white;
 }
 
+.member-role.member {
+    background: #28a745;
+    color: white;
+}
+
 /* Subscriptions */
 .subscription-summary {
     margin-bottom: 3rem;
