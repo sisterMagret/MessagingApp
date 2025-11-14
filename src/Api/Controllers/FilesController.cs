@@ -12,11 +12,13 @@ namespace Api.Controllers
     public class FilesController : ControllerBase
     {
         private readonly IFileService _fileService;
+        private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<FilesController> _logger;
 
-        public FilesController(IFileService fileService, ILogger<FilesController> logger)
+        public FilesController(IFileService fileService, ISubscriptionService subscriptionService, ILogger<FilesController> logger)
         {
             _fileService = fileService;
+            _subscriptionService = subscriptionService;
             _logger = logger;
         }
 
@@ -34,12 +36,36 @@ namespace Api.Controllers
                 return Unauthorized();
             }
 
+            // Check if user has File Sharing subscription
+            var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
+            if (!hasFileSharing)
+            {
+                return StatusCode(403, "File sharing feature requires a subscription. Please subscribe to the File Sharing plan.");
+            }
+
             try
             {
+                // Determine file type based on extension
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var fileType = extension switch
+                {
+                    ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" => FileType.Image,
+                    ".mp3" or ".wav" or ".ogg" or ".m4a" => FileType.Audio,
+                    ".mp4" => FileType.Video,
+                    ".pdf" or ".doc" or ".docx" or ".txt" => FileType.Document,
+                    _ => FileType.Other
+                };
+
+                // Debug logging
+                _logger.LogInformation("File upload validation - Name: {FileName}, Size: {FileSize}, ContentType: {ContentType}, DetectedType: {FileType}",
+                    file.FileName, file.Length, file.ContentType, fileType);
+
                 // Validate file
-                var isValid = await _fileService.ValidateFileAsync(file, FileType.Document);
+                var isValid = await _fileService.ValidateFileAsync(file, fileType);
                 if (!isValid)
                 {
+                    _logger.LogWarning("File validation failed - Name: {FileName}, Size: {FileSize}, Type: {FileType}",
+                        file.FileName, file.Length, fileType);
                     return BadRequest("Invalid file type or size.");
                 }
 
@@ -58,7 +84,7 @@ namespace Api.Controllers
                     FileSize = file.Length,
                     FileData = fileData,
                     UserId = userId,
-                    FileType = FileType.Document
+                    FileType = fileType
                 };
 
                 var result = await _fileService.UploadFileAsync(uploadRequest, userId);
@@ -93,6 +119,13 @@ namespace Api.Controllers
                 return Unauthorized();
             }
 
+            // Check if user has File Sharing subscription
+            var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
+            if (!hasFileSharing)
+            {
+                return StatusCode(403, "File sharing feature requires a subscription. Please subscribe to the File Sharing plan.");
+            }
+
             try
             {
                 var fileData = await _fileService.DownloadFileAsync(fileUrl, userId);
@@ -125,6 +158,13 @@ namespace Api.Controllers
             if (!int.TryParse(userIdClaim, out var userId))
             {
                 return Unauthorized();
+            }
+
+            // Check if user has File Sharing subscription
+            var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
+            if (!hasFileSharing)
+            {
+                return StatusCode(403, "File sharing feature requires a subscription. Please subscribe to the File Sharing plan.");
             }
 
             try

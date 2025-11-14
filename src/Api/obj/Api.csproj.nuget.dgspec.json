@@ -254,15 +254,15 @@
             },
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.10, )"
             },
             "Microsoft.Extensions.Logging.Abstractions": {
               "target": "Package",
               "version": "[9.0.10, )"
             },
-            "Microsoft.IdentityModel.Tokens": {
+            "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
-              "version": "[8.14.0, )"
+              "version": "[8.2.1, )"
             }
           },
           "imports": [

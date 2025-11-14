@@ -55,12 +55,17 @@ namespace Infrastructure.Services
             return GenerateToken(user);
         }
 
+        public async Task<User?> FindUserByEmailAsync(string email)
+        {
+            return await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        }
+
         private AuthResponse GenerateToken(User user)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim("sub", user.Id.ToString()), // Use "sub" (subject) standard claim
+                new Claim("email", user.Email)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));

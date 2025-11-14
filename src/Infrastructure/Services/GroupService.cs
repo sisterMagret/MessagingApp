@@ -21,12 +21,18 @@ namespace Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task<Group> CreateGroupAsync(int userId, CreateGroupRequest request)
+        public async Task<GroupDto> CreateGroupAsync(int userId, CreateGroupRequest request)
         {
             // Check if user has group chat subscription
             if (!await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.GroupChat))
             {
                 throw new UnauthorizedAccessException("Group chat feature is not included in your current plan.");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new ArgumentException("User not found.");
             }
 
             var group = new Group
@@ -54,7 +60,16 @@ namespace Infrastructure.Services
 
             _logger.LogInformation("User {UserId} created group {GroupId}", userId, group.Id);
 
-            return group;
+            return new GroupDto
+            {
+                Id = group.Id,
+                Name = group.Name,
+                Description = group.Description,
+                CreatedById = group.CreatedById,
+                CreatedByEmail = user.Email,
+                CreatedAt = group.CreatedAt,
+                MemberCount = 1
+            };
         }
 
         public async Task AddMemberAsync(int groupId, int newMemberId, int currentUserId)
@@ -158,19 +173,52 @@ namespace Infrastructure.Services
                 memberId, groupId, currentUserId);
         }
 
-        public async Task<Group?> GetGroupAsync(int groupId)
+        public async Task<GroupDetailDto?> GetGroupAsync(int groupId)
         {
-            return await _context.Groups
+            var group = await _context.Groups
+                .Include(g => g.CreatedBy)
                 .Include(g => g.Members)
-                .Include(g => g.Messages)
+                .ThenInclude(m => m.User)
                 .FirstOrDefaultAsync(g => g.Id == groupId);
+
+            if (group == null) return null;
+
+            var messageCount = await _context.Messages.CountAsync(m => m.GroupId == groupId);
+
+            return new GroupDetailDto
+            {
+                Id = group.Id,
+                Name = group.Name,
+                Description = group.Description,
+                CreatedById = group.CreatedById,
+                CreatedByEmail = group.CreatedBy.Email,
+                CreatedAt = group.CreatedAt,
+                Members = group.Members.Select(m => new GroupMemberDto
+                {
+                    UserId = m.UserId,
+                    UserEmail = m.User.Email,
+                    Role = m.Role,
+                    JoinedAt = m.JoinedAt
+                }).ToList(),
+                MessageCount = messageCount
+            };
         }
 
-        public async Task<List<Group>> GetUserGroupsAsync(int userId)
+        public async Task<List<GroupDto>> GetUserGroupsAsync(int userId)
         {
             return await _context.Groups
                 .Where(g => g.Members.Any(m => m.UserId == userId))
-                .Include(g => g.Members)
+                .Include(g => g.CreatedBy)
+                .Select(g => new GroupDto
+                {
+                    Id = g.Id,
+                    Name = g.Name,
+                    Description = g.Description,
+                    CreatedById = g.CreatedById,
+                    CreatedByEmail = g.CreatedBy.Email,
+                    CreatedAt = g.CreatedAt,
+                    MemberCount = g.Members.Count()
+                })
                 .ToListAsync();
         }
     }

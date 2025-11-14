@@ -6,12 +6,11 @@ let currentTab = 'messages';
 let groups = [];
 let messages = [];
 let signalRConnection = null;
+let userSubscriptions = {};
 
 // API Configuration
-// Auto-detect the API base URL or use localhost:5250 as fallback
-const API_BASE = window.location.hostname === 'localhost' && window.location.port === '5250' 
-    ? '/api' 
-    : 'http://localhost:5250/api';
+// Always use absolute URL to ensure API calls go to the correct port
+const API_BASE = 'http://localhost:5250/api';
 const PAGE_SIZE = 10;
 
 // Initialize Application
@@ -66,7 +65,13 @@ function setupEventListeners() {
     document.getElementById('create-group-btn').addEventListener('click', () => showModal('group-modal'));
     document.getElementById('create-group-form').addEventListener('submit', handleCreateGroup);
     document.getElementById('back-to-groups').addEventListener('click', showGroupsList);
-    document.getElementById('add-member-btn').addEventListener('click', handleAddMember);
+    document.getElementById('add-member-btn').addEventListener('click', showAddMemberModal);
+    
+    // Add member modal events (check if elements exist to avoid errors)
+    const searchUserBtn = document.getElementById('search-user-btn');
+    const confirmAddMemberBtn = document.getElementById('confirm-add-member');
+    if (searchUserBtn) searchUserBtn.addEventListener('click', handleSearchUser);
+    if (confirmAddMemberBtn) confirmAddMemberBtn.addEventListener('click', handleConfirmAddMember);
     
     // Subscriptions
     document.getElementById('refresh-subscriptions').addEventListener('click', loadSubscriptions);
@@ -119,6 +124,10 @@ async function handleLogin(e) {
             const data = await response.json();
             authToken = data.token;
             currentUser = { email: data.email };
+            
+            // Debug: Log token info
+            console.log('Login successful, token:', authToken ? 'received' : 'missing');
+            console.log('Token length:', authToken?.length);
             
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -250,7 +259,8 @@ async function loadMessages() {
         });
         
         if (response.ok) {
-            messages = await response.json();
+            const data = await response.json();
+            messages = data.items || [];
             renderMessages();
         } else {
             showNotification('Failed to load messages', 'error');
@@ -317,13 +327,20 @@ async function handleSendMessage(e) {
         
         // Handle file upload if present
         if (fileInput.files.length > 0) {
+            // Check if user has File Sharing subscription (feature 2)
+            if (!hasFeature(2)) {
+                showNotification('File sharing requires a subscription. Please subscribe to the File Sharing plan.', 'warning');
+                return;
+            }
+            
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             
-            const fileResponse = await fetch('/api/files/upload', {
+            const fileResponse = await fetch(`${API_BASE}/files/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authToken}`
+                    // Note: Don't set Content-Type for FormData - browser sets it automatically with boundary
                 },
                 body: formData
             });
@@ -333,6 +350,10 @@ async function handleSendMessage(e) {
                 requestData.attachmentUrl = fileData.url;
             }
         }
+        
+        // Debug: Check token before sending
+        console.log('Sending message with token:', authToken ? 'available' : 'missing');
+        console.log('Authorization header:', `Bearer ${authToken}`);
         
         const response = await fetch(`${API_BASE}/messages`, {
             method: 'POST',
@@ -424,6 +445,19 @@ function changePage(direction) {
 // ==================== GROUPS ====================
 
 async function loadGroups() {
+    // Check if user has Group Chat subscription (feature 4)
+    if (!hasFeature(4)) {
+        const groupsList = document.getElementById('groups-list');
+        groupsList.innerHTML = `
+            <div class="subscription-required">
+                <h3>Group Chat Feature</h3>
+                <p>This feature requires a subscription to the Group Chat plan.</p>
+                <button class="btn btn-primary" onclick="switchTab('subscriptions')">View Subscription Plans</button>
+            </div>
+        `;
+        return;
+    }
+    
     try {
         const response = await fetch(`${API_BASE}/groups`, {
             headers: {
@@ -464,6 +498,15 @@ function renderGroups() {
 
 async function handleCreateGroup(e) {
     e.preventDefault();
+    
+    // Check if user has Group Chat subscription (feature 4)
+    if (!hasFeature(4)) {
+        showNotification('Group chat feature requires a subscription. Please subscribe to the Group Chat plan.', 'warning');
+        closeModals();
+        // Switch to subscriptions tab to show available plans
+        switchTab('subscriptions');
+        return;
+    }
     
     const name = document.getElementById('group-name').value;
     const description = document.getElementById('group-description').value;
@@ -544,20 +587,72 @@ function showGroupsList() {
     document.getElementById('group-details').style.display = 'none';
 }
 
-async function handleAddMember() {
-    const userId = prompt('Enter the user ID to add to this group:');
-    if (!userId || isNaN(parseInt(userId))) {
-        showNotification('Please enter a valid user ID', 'error');
+function showAddMemberModal() {
+    // Check if user has Group Chat subscription (feature 4)
+    if (!hasFeature(4)) {
+        showNotification('Group chat feature requires a subscription. Please subscribe to the Group Chat plan.', 'warning');
+        // Switch to subscriptions tab to show available plans
+        switchTab('subscriptions');
         return;
     }
     
-    const groupId = getCurrentGroupId(); // You'll need to track this
+    const groupId = getCurrentGroupId();
+    if (!groupId) {
+        showNotification('Error: No group selected', 'error');
+        return;
+    }
+    
+    // Reset modal form
+    document.getElementById('member-user-id').value = '';
+    document.getElementById('member-email').value = '';
+    document.getElementById('user-search-result').style.display = 'none';
+    
+    showModal('add-member-modal');
+}
+
+async function handleSearchUser() {
+    const email = document.getElementById('member-email').value.trim();
+    if (!email) {
+        showNotification('Please enter an email address', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/auth/search?email=${encodeURIComponent(email)}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            document.getElementById('member-user-id').value = user.userId;
+            document.getElementById('found-user-info').textContent = `${user.email} (ID: ${user.userId})`;
+            document.getElementById('user-search-result').style.display = 'block';
+        } else {
+            showNotification('User not found', 'error');
+            document.getElementById('user-search-result').style.display = 'none';
+        }
+    } catch (error) {
+        showNotification('Error searching for user', 'error');
+    }
+}
+
+async function handleConfirmAddMember() {
+    const userId = document.getElementById('member-user-id').value.trim();
+    if (!userId || isNaN(parseInt(userId))) {
+        showNotification('Please enter a valid user ID or search by email first', 'error');
+        return;
+    }
+    
+    const groupId = getCurrentGroupId();
     if (!groupId) {
         showNotification('Error: No group selected', 'error');
         return;
     }
     
     try {
+        showLoading(true);
         const response = await fetch(`${API_BASE}/groups/${groupId}/members/${userId}`, {
             method: 'POST',
             headers: {
@@ -567,6 +662,7 @@ async function handleAddMember() {
         
         if (response.ok) {
             showNotification('Member added successfully!', 'success');
+            hideModal('add-member-modal');
             showGroupDetails(groupId); // Refresh group details
         } else {
             const error = await response.text();
@@ -574,6 +670,8 @@ async function handleAddMember() {
         }
     } catch (error) {
         showNotification('Error adding member', 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
@@ -610,7 +708,61 @@ function getCurrentGroupId() {
     return group ? group.id : null;
 }
 
-// ==================== SUBSCRIPTIONS ====================
+// ==================== SUBSCRIPTION FUNCTIONS ====================
+
+function hasFeature(featureNumber) {
+    return userSubscriptions && userSubscriptions[featureNumber] === true;
+}
+
+function updateUIBasedOnSubscriptions() {
+    // File Sharing UI updates (Feature 2)
+    const fileAttachmentContainer = document.querySelector('#message-file').closest('div');
+    const uploadFileBtn = document.getElementById('upload-file-btn');
+    
+    if (hasFeature(2)) { // File Sharing feature
+        // Show file upload elements
+        if (fileAttachmentContainer) {
+            fileAttachmentContainer.style.display = 'block';
+        }
+        if (uploadFileBtn) {
+            uploadFileBtn.disabled = false;
+            uploadFileBtn.title = 'Upload File';
+        }
+    } else {
+        // Hide/disable file upload elements
+        if (fileAttachmentContainer) {
+            fileAttachmentContainer.style.display = 'none';
+        }
+        if (uploadFileBtn) {
+            uploadFileBtn.disabled = true;
+            uploadFileBtn.title = 'File sharing requires subscription';
+        }
+    }
+    
+    // Group Chat UI updates (Feature 4)
+    const createGroupBtn = document.getElementById('create-group-btn');
+    const groupsTab = document.querySelector('[data-tab="groups"]');
+    
+    if (hasFeature(4)) { // Group Chat feature
+        if (createGroupBtn) {
+            createGroupBtn.disabled = false;
+            createGroupBtn.title = 'Create Group';
+        }
+        if (groupsTab) {
+            groupsTab.style.opacity = '1';
+            groupsTab.title = 'Group Chats';
+        }
+    } else {
+        if (createGroupBtn) {
+            createGroupBtn.disabled = true;
+            createGroupBtn.title = 'Group chat requires subscription';
+        }
+        if (groupsTab) {
+            groupsTab.style.opacity = '0.5';
+            groupsTab.title = 'Group chat requires subscription';
+        }
+    }
+}
 
 async function loadSubscriptions() {
     try {
@@ -634,8 +786,20 @@ async function loadSubscriptions() {
             const summary = await summaryResponse.json();
             const plans = await plansResponse.json();
             
+            // Store subscriptions globally for access control
+            // Convert activeSubscriptions array to feature map for hasFeature() checks
+            userSubscriptions = {};
+            if (summary.activeSubscriptions) {
+                summary.activeSubscriptions.forEach(sub => {
+                    userSubscriptions[sub.feature] = true;
+                });
+            }
+            
             renderSubscriptionSummary(summary);
             renderAvailablePlans(plans);
+            
+            // Update UI based on subscription status
+            updateUIBasedOnSubscriptions();
         } else {
             showNotification('Failed to load subscription information', 'error');
         }
@@ -649,16 +813,33 @@ async function loadSubscriptions() {
 function renderSubscriptionSummary(summary) {
     const container = document.getElementById('subscription-info');
     
-    const allFeatures = ['FileSharing', 'GroupChat', 'PremiumSupport'];
+    // Map feature numbers to names
+    const featureNames = {
+        1: 'Voice Messages',
+        2: 'File Sharing', 
+        4: 'Group Chat',
+        5: 'Email Alerts'
+    };
     
-    container.innerHTML = allFeatures.map(feature => {
-        const activeSubscription = summary.activeSubscriptions.find(s => s.feature === feature);
-        const expiredSubscription = summary.expiredSubscriptions.find(s => s.feature === feature);
+    const allFeatureNumbers = [1, 2, 4, 5];
+    
+    let summaryHtml = `
+        <div class="subscription-overview">
+            <h4>Your Subscription Status</h4>
+            <p><strong>Monthly Cost:</strong> $${summary.monthlyCost.toFixed(2)}</p>
+            <p><strong>Active Features:</strong> ${summary.activeSubscriptions.length}</p>
+        </div>
+    `;
+    
+    summaryHtml += allFeatureNumbers.map(featureNumber => {
+        const featureName = featureNames[featureNumber];
+        const activeSubscription = summary.activeSubscriptions.find(s => s.feature === featureNumber);
+        const expiredSubscription = summary.expiredSubscriptions.find(s => s.feature === featureNumber);
         
         if (activeSubscription) {
             return `
                 <div class="subscription-card active">
-                    <div class="feature-name">${feature}</div>
+                    <div class="feature-name">${featureName}</div>
                     <div class="feature-status">✅ Active</div>
                     <div class="feature-dates">
                         Expires: ${formatDate(activeSubscription.endDate)}
@@ -668,7 +849,7 @@ function renderSubscriptionSummary(summary) {
         } else if (expiredSubscription) {
             return `
                 <div class="subscription-card expired">
-                    <div class="feature-name">${feature}</div>
+                    <div class="feature-name">${featureName}</div>
                     <div class="feature-status">❌ Expired</div>
                     <div class="feature-dates">
                         Expired: ${formatDate(expiredSubscription.endDate)}
@@ -678,7 +859,7 @@ function renderSubscriptionSummary(summary) {
         } else {
             return `
                 <div class="subscription-card">
-                    <div class="feature-name">${feature}</div>
+                    <div class="feature-name">${featureName}</div>
                     <div class="feature-status">⚪ Not Subscribed</div>
                     <div class="feature-dates">
                         Available for purchase
@@ -688,18 +869,7 @@ function renderSubscriptionSummary(summary) {
         }
     }).join('');
     
-    // Add total cost info if there are active subscriptions
-    if (summary.activeSubscriptions.length > 0) {
-        container.innerHTML += `
-            <div class="subscription-card">
-                <div class="feature-name">Monthly Cost</div>
-                <div class="feature-status">$${summary.monthlyCost.toFixed(2)}</div>
-                <div class="feature-dates">
-                    Total for all active subscriptions
-                </div>
-            </div>
-        `;
-    }
+    container.innerHTML = summaryHtml;
 }
 
 function renderAvailablePlans(plans) {
@@ -710,22 +880,70 @@ function renderAvailablePlans(plans) {
         return;
     }
     
+    // Map feature numbers to names
+    const featureNames = {
+        1: 'Voice Messages',
+        2: 'File Sharing', 
+        4: 'Group Chat',
+        5: 'Email Alerts'
+    };
+    
     container.innerHTML = plans.map(plan => `
         <div class="plan-card">
-            <div class="plan-feature">${plan.feature}</div>
-            <div class="plan-price">$${plan.monthlyPrice}</div>
-            <div class="plan-period">per month</div>
+            <div class="plan-header">
+                <div class="plan-feature">${featureNames[plan.feature] || 'Unknown Feature'}</div>
+                <div class="plan-price">$${plan.monthlyPrice.toFixed(2)}</div>
+                <div class="plan-period">per month</div>
+            </div>
             <div class="plan-description">${plan.description || ''}</div>
-            <button class="btn btn-primary" onclick="subscribeToPlan('${plan.feature}')">
-                Subscribe Now
-            </button>
+            <div class="plan-actions">
+                <button class="btn btn-primary" onclick="subscribeToPlan(${plan.feature}, '${featureNames[plan.feature]}', ${plan.monthlyPrice})">
+                    Subscribe Now
+                </button>
+            </div>
         </div>
     `).join('');
 }
 
-async function subscribeToPlan(feature) {
-    showNotification('Subscription feature coming soon!', 'warning');
-    // In a real app, you'd integrate with a payment processor here
+async function subscribeToPlan(featureNumber, featureName, monthlyPrice) {
+    if (!confirm(`Subscribe to ${featureName} for $${monthlyPrice.toFixed(2)} per month?`)) {
+        return;
+    }
+    
+    try {
+        showLoading(true);
+        
+        // Process payment and subscription in one step
+        const paymentResponse = await fetch(`${API_BASE}/payments/purchase`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                feature: featureNumber,
+                months: 1, // Subscribe for 1 month
+                paymentToken: 'demo_token_' + Date.now() // In real app, this would come from payment processor
+            })
+        });
+        
+        if (paymentResponse.ok) {
+            const result = await paymentResponse.json();
+            showNotification(`Successfully subscribed to ${featureName} for $${monthlyPrice.toFixed(2)}!`, 'success');
+            
+            // Refresh subscription data and update UI
+            await loadSubscriptions();
+        } else {
+            const errorText = await paymentResponse.text();
+            throw new Error(`Payment failed: ${errorText}`);
+        }
+        
+    } catch (error) {
+        console.error('Subscription error:', error);
+        showNotification('Failed to subscribe. Please try again.', 'error');
+    } finally {
+        showLoading(false);
+    }
 }
 
 // ==================== FILES ====================
@@ -742,6 +960,14 @@ function loadFiles() {
 }
 
 function toggleFileUpload() {
+    // Check if user has File Sharing subscription (feature 2)
+    if (!hasFeature(2)) {
+        showNotification('File sharing requires a subscription. Please subscribe to the File Sharing plan.', 'warning');
+        // Switch to subscriptions tab to show available plans
+        switchTab('subscriptions');
+        return;
+    }
+    
     const form = document.getElementById('file-upload-form');
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
@@ -771,10 +997,11 @@ async function handleFileUpload(e) {
     try {
         showLoading(true);
         
-        const response = await fetch('/api/files/upload', {
+        const response = await fetch(`${API_BASE}/files/upload`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`
+                // Note: Don't set Content-Type for FormData - browser sets it automatically with boundary
             },
             body: formData
         });

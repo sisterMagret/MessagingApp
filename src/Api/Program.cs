@@ -14,7 +14,12 @@ using Microsoft.Extensions.FileProviders;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // Swagger with JWT support
@@ -72,7 +77,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
 
-        // SignalR JWT support
+        // SignalR JWT support and debugging
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -83,6 +88,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     context.Token = accessToken;
                 }
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine($"Token validated successfully for user: {context.Principal?.FindFirst("sub")?.Value}");
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"JWT Authentication failed: {context.Exception}");
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                Console.WriteLine($"JWT Challenge: {context.Error} - {context.ErrorDescription}");
                 return Task.CompletedTask;
             }
         };
@@ -195,6 +215,12 @@ static async Task SeedDemoData(MessagingDbContext context)
         {
             Email = "charlie@example.com",
             PasswordHash = passwordHasher.HashPassword(null!, "Demo@123"),
+            CreatedAt = DateTime.UtcNow
+        },
+        new Core.Entities.User
+        {
+            Email = "sistermagret@gmail.com",
+            PasswordHash = passwordHasher.HashPassword(null!, "icui4cu2go"),
             CreatedAt = DateTime.UtcNow
         }
     };
