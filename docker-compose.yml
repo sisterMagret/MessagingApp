@@ -1,0 +1,40 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: messagingapp-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=MessagingApp123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P MessagingApp123! -Q 'SELECT 1' -C"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  messagingapp-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: messagingapp-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=MessagingAppDb;User Id=sa;Password=MessagingApp123!;TrustServerCertificate=true;
+    ports:
+      - "5250:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  sqlserver_data:
+    driver: local

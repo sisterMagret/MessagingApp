@@ -57,9 +57,9 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Database
-// Use InMemory database for development/demo purposes
+// Use SQL Server database
 builder.Services.AddDbContext<MessagingDbContext>(options =>
-    options.UseInMemoryDatabase("MessagingAppDb"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -149,10 +149,44 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<MessagingDbContext>();
-    await SeedDemoData(context);
-}
 
-// Configure the HTTP request pipeline
+    // Retry database connection with exponential backoff
+    var maxRetries = 5;
+    var delay = TimeSpan.FromSeconds(5);
+
+    for (int i = 0; i < maxRetries; i++)
+    {
+        try
+        {
+            Console.WriteLine($"Database connection attempt {i + 1}/{maxRetries}...");
+            await context.Database.CanConnectAsync();
+            Console.WriteLine("✅ Database connection successful!");
+
+            // Apply migrations
+            await context.Database.MigrateAsync();
+            Console.WriteLine("✅ Database migrations applied successfully!");
+
+            // Seed data
+            await SeedDemoData(context);
+            Console.WriteLine("✅ Demo data seeded successfully!");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Database connection failed: {ex.Message}");
+
+            if (i == maxRetries - 1)
+            {
+                Console.WriteLine("💥 All database connection attempts failed. Exiting...");
+                throw;
+            }
+
+            Console.WriteLine($"⏳ Retrying in {delay.TotalSeconds} seconds...");
+            await Task.Delay(delay);
+            delay = TimeSpan.FromSeconds(delay.TotalSeconds * 2); // Exponential backoff
+        }
+    }
+}// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
