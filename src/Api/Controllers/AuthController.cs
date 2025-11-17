@@ -20,7 +20,7 @@ namespace Api.Controllers
             {
                 // Validate request
                 var validationError = ValidateRequired(
-                    (request?.Email, "Email"), 
+                    (request?.Email, "Email"),
                     (request?.Password, "Password")
                 );
                 if (validationError != null) return validationError;
@@ -53,7 +53,7 @@ namespace Api.Controllers
             {
                 // Validate request
                 var validationError = ValidateRequired(
-                    (request?.Email, "Email"), 
+                    (request?.Email, "Email"),
                     (request?.Password, "Password")
                 );
                 if (validationError != null) return validationError;
@@ -81,11 +81,11 @@ namespace Api.Controllers
                 if (authError != null) return authError;
 
                 var userEmail = GetCurrentUserEmail();
-                var userData = new 
-                { 
-                    UserId = userId, 
-                    Email = userEmail, 
-                    Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList() 
+                var userData = new
+                {
+                    UserId = userId,
+                    Email = userEmail,
+                    Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
                 };
 
                 return Success(userData, "User information retrieved successfully.");

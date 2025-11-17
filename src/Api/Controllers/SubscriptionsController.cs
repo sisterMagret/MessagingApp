@@ -44,7 +44,7 @@ namespace Api.Controllers
 
                 var hasFeature = await _subscriptionService.HasActiveFeatureAsync(userId, feature);
                 var responseData = new { UserId = userId, Feature = feature.ToString(), Active = hasFeature };
-                
+
                 return Success(responseData, $"Feature {feature} status retrieved successfully.");
             }
             catch (Exception ex)

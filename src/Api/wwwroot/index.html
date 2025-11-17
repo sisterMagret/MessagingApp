@@ -19,25 +19,7 @@
         </header>
 
         <!-- Main Content -->
-        <main class="main-content">        // Old code (incorrect):
-        userSubscriptions = summary.activeFeatures || {};
-        
-        // New code (correct):
-        userSubscriptions = {};
-        if (summary.activeSubscriptions) {
-            summary.activeSubscriptions.forEach(sub => {
-                userSubscriptions[sub.feature] = true;
-            });
-        }        // Old code (incorrect):
-        userSubscriptions = summary.activeFeatures || {};
-        
-        // New code (correct):
-        userSubscriptions = {};
-        if (summary.activeSubscriptions) {
-            summary.activeSubscriptions.forEach(sub => {
-                userSubscriptions[sub.feature] = true;
-            });
-        }
+        <main class="main-content">        
             <!-- Login/Register Section -->
             <section id="auth-section" class="section">
                 <div class="auth-container">

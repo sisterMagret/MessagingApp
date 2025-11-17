@@ -78,12 +78,12 @@ namespace Api.Controllers
         {
             userId = 0;
             var userIdValue = GetCurrentUserId();
-            
+
             if (!userIdValue.HasValue)
             {
                 return Error("User authentication is required.", 401, "AUTH_REQUIRED");
             }
-            
+
             userId = userIdValue.Value;
             return null; // No error
         }
@@ -94,7 +94,7 @@ namespace Api.Controllers
         protected IActionResult? ValidateRequired(params (object? value, string name)[] parameters)
         {
             var errors = new List<string>();
-            
+
             foreach (var (value, name) in parameters)
             {
                 if (value == null || (value is string str && string.IsNullOrWhiteSpace(str)))
@@ -103,7 +103,7 @@ namespace Api.Controllers
                 }
             }
 
-            return errors.Count > 0 
+            return errors.Count > 0
                 ? Error("Validation failed.", 400, "VALIDATION_ERROR", errors)
                 : null;
         }
