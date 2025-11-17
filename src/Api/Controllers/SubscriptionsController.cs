@@ -1,6 +1,7 @@
 using Core.Dtos;
 using Core.Enums;
 using Core.Interfaces;
+using Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class SubscriptionsController : ControllerBase
+    public class SubscriptionsController : BaseApiController
     {
         private readonly ISubscriptionService _subscriptionService;
         private readonly IPaymentService _paymentService;
@@ -31,12 +32,25 @@ namespace Api.Controllers
         [HttpGet("has-feature/{feature}")]
         public async Task<IActionResult> HasFeature([FromRoute] FeatureType feature)
         {
-            var nameId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(nameId, out var userId))
-                return Unauthorized();
+            try
+            {
+                // Validate authentication
+                var authError = ValidateUserAuth(out var userId);
+                if (authError != null) return authError;
 
-            var hasFeature = await _subscriptionService.HasActiveFeatureAsync(userId, feature);
-            return Ok(new { userId, feature, active = hasFeature });
+                // Validate feature
+                if (!Enum.IsDefined(typeof(FeatureType), feature))
+                    return Error("Invalid feature type.", 400, "INVALID_FEATURE");
+
+                var hasFeature = await _subscriptionService.HasActiveFeatureAsync(userId, feature);
+                var responseData = new { UserId = userId, Feature = feature.ToString(), Active = hasFeature };
+                
+                return Success(responseData, $"Feature {feature} status retrieved successfully.");
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, "Failed to check feature status");
+            }
         }
 
         /// <summary>

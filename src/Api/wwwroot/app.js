@@ -121,10 +121,11 @@ async function handleLogin(e) {
             body: JSON.stringify({ email, password })
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            authToken = data.token;
-            currentUser = { email: data.email };
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            authToken = result.data.token;
+            currentUser = { email: result.data.email };
             
             // Debug: Log token info
             console.log('Login successful, token:', authToken ? 'received' : 'missing');
@@ -137,8 +138,7 @@ async function handleLogin(e) {
             showDashboard();
             initializeSignalR();
         } else {
-            const error = await response.text();
-            showNotification(error || 'Login failed', 'error');
+            showNotification(result.message || 'Login failed', 'error');
         }
     } catch (error) {
         showNotification('Network error. Please try again.', 'error');
@@ -170,13 +170,14 @@ async function handleRegister(e) {
             body: JSON.stringify({ email, password })
         });
         
-        if (response.ok) {
-            showNotification('Registration successful! Please login.', 'success');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Registration successful! Please login.', 'success');
             showAuthForm('login');
             document.getElementById('register-form-element').reset();
         } else {
-            const error = await response.text();
-            showNotification(error || 'Registration failed', 'error');
+            showNotification(result.message || 'Registration failed', 'error');
         }
     } catch (error) {
         showNotification('Network error. Please try again.', 'error');
@@ -259,12 +260,13 @@ async function loadMessages() {
             }
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            messages = data.items || [];
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            messages = result.data?.items || [];
             renderMessages();
         } else {
-            showNotification('Failed to load messages', 'error');
+            showNotification(result.message || 'Failed to load messages', 'error');
         }
     } catch (error) {
         showNotification('Error loading messages', 'error');
@@ -346,9 +348,12 @@ async function handleSendMessage(e) {
                 body: formData
             });
             
-            if (fileResponse.ok) {
-                const fileData = await fileResponse.json();
-                requestData.attachmentUrl = fileData.url;
+            const fileResult = await fileResponse.json();
+            if (fileResponse.ok && fileResult.success) {
+                requestData.attachmentUrl = fileResult.data.url;
+            } else {
+                showNotification(fileResult.message || 'Failed to upload file', 'error');
+                return;
             }
         }
         
@@ -365,14 +370,15 @@ async function handleSendMessage(e) {
             body: JSON.stringify(requestData)
         });
         
-        if (response.ok) {
-            showNotification('Message sent successfully!', 'success');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Message sent successfully!', 'success');
             closeModals();
             document.getElementById('compose-form').reset();
             loadMessages(); // Refresh messages
         } else {
-            const error = await response.text();
-            showNotification(error || 'Failed to send message', 'error');
+            showNotification(result.message || 'Failed to send message', 'error');
         }
     } catch (error) {
         showNotification('Error sending message', 'error');
@@ -404,8 +410,10 @@ async function loadGroupsForSelect() {
             }
         });
         
-        if (response.ok) {
-            const userGroups = await response.json();
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            const userGroups = result.data || [];
             const select = document.getElementById('group-select');
             select.innerHTML = '<option value="">Select a group...</option>' +
                 userGroups.map(group => `<option value="${group.id}">${group.name}</option>`).join('');
@@ -424,11 +432,13 @@ async function markAsRead(messageId) {
             }
         });
         
-        if (response.ok) {
-            showNotification('Message marked as read', 'success');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Message marked as read', 'success');
             loadMessages(); // Refresh messages
         } else {
-            showNotification('Failed to mark message as read', 'error');
+            showNotification(result.message || 'Failed to mark message as read', 'error');
         }
     } catch (error) {
         showNotification('Error marking message as read', 'error');
@@ -466,11 +476,13 @@ async function loadGroups() {
             }
         });
         
-        if (response.ok) {
-            groups = await response.json();
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            groups = result.data || [];
             renderGroups();
         } else {
-            showNotification('Failed to load groups', 'error');
+            showNotification(result.message || 'Failed to load groups', 'error');
         }
     } catch (error) {
         showNotification('Error loading groups', 'error');
@@ -524,14 +536,15 @@ async function handleCreateGroup(e) {
             body: JSON.stringify({ name, description })
         });
         
-        if (response.ok) {
-            showNotification('Group created successfully!', 'success');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Group created successfully!', 'success');
             closeModals();
             document.getElementById('create-group-form').reset();
             loadGroups(); // Refresh groups
         } else {
-            const error = await response.text();
-            showNotification(error || 'Failed to create group', 'error');
+            showNotification(result.message || 'Failed to create group', 'error');
         }
     } catch (error) {
         showNotification('Error creating group', 'error');
@@ -548,8 +561,10 @@ async function showGroupDetails(groupId) {
             }
         });
         
-        if (response.ok) {
-            const group = await response.json();
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            const group = result.data;
             
             // Set current group ID for getCurrentGroupId() function
             currentGroupId = groupId;
@@ -599,7 +614,7 @@ async function showGroupDetails(groupId) {
             document.getElementById('groups-list').style.display = 'none';
             document.getElementById('group-details').style.display = 'block';
         } else {
-            showNotification('Failed to load group details', 'error');
+            showNotification(result.message || 'Failed to load group details', 'error');
         }
     } catch (error) {
         showNotification('Error loading group details', 'error');
@@ -648,13 +663,15 @@ async function handleSearchUser() {
             }
         });
         
-        if (response.ok) {
-            const user = await response.json();
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            const user = result.data;
             document.getElementById('member-user-id').value = user.userId;
             document.getElementById('found-user-info').textContent = `${user.email} (ID: ${user.userId})`;
             document.getElementById('user-search-result').style.display = 'block';
         } else {
-            showNotification('User not found', 'error');
+            showNotification(result.message || 'User not found', 'error');
             document.getElementById('user-search-result').style.display = 'none';
         }
     } catch (error) {
@@ -684,13 +701,14 @@ async function handleConfirmAddMember() {
             }
         });
         
-        if (response.ok) {
-            showNotification('Member added successfully!', 'success');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Member added successfully!', 'success');
             hideModal('add-member-modal');
             showGroupDetails(groupId); // Refresh group details
         } else {
-            const error = await response.text();
-            showNotification(error || 'Failed to add member', 'error');
+            showNotification(result.message || 'Failed to add member', 'error');
         }
     } catch (error) {
         showNotification('Error adding member', 'error');
@@ -712,12 +730,13 @@ async function removeMember(groupId, userId) {
             }
         });
         
-        if (response.ok) {
-            showNotification('Member removed successfully!', 'success');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Member removed successfully!', 'success');
             showGroupDetails(groupId); // Refresh group details
         } else {
-            const error = await response.text();
-            showNotification(error || 'Failed to remove member', 'error');
+            showNotification(result.message || 'Failed to remove member', 'error');
         }
     } catch (error) {
         showNotification('Error removing member', 'error');
@@ -745,13 +764,14 @@ async function handleDeleteGroup() {
             }
         });
 
-        if (response.ok) {
-            showNotification('Group deleted successfully!', 'success');
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Group deleted successfully!', 'success');
             showGroupsList(); // Go back to groups list
             loadGroups(); // Refresh groups list
         } else {
-            const error = await response.text();
-            showNotification(error || 'Failed to delete group', 'error');
+            showNotification(result.message || 'Failed to delete group', 'error');
         }
     } catch (error) {
         showNotification('Error deleting group', 'error');
@@ -863,9 +883,12 @@ async function loadSubscriptions() {
             }
         });
         
-        if (summaryResponse.ok && plansResponse.ok) {
-            const summary = await summaryResponse.json();
-            const plans = await plansResponse.json();
+        const summaryResult = await summaryResponse.json();
+        const plansResult = await plansResponse.json();
+        
+        if (summaryResponse.ok && summaryResult.success && plansResponse.ok && plansResult.success) {
+            const summary = summaryResult.data;
+            const plans = plansResult.data;
             
             // Store subscriptions globally for access control
             // Convert activeSubscriptions array to feature map for hasFeature() checks
@@ -882,7 +905,7 @@ async function loadSubscriptions() {
             // Update UI based on subscription status
             updateUIBasedOnSubscriptions();
         } else {
-            showNotification('Failed to load subscription information', 'error');
+            showNotification(summaryResult.message || plansResult.message || 'Failed to load subscription information', 'error');
         }
     } catch (error) {
         showNotification('Error loading subscriptions', 'error');
@@ -1008,15 +1031,15 @@ async function subscribeToPlan(featureNumber, featureName, monthlyPrice) {
             })
         });
         
-        if (paymentResponse.ok) {
-            const result = await paymentResponse.json();
-            showNotification(`Successfully subscribed to ${featureName} for $${monthlyPrice.toFixed(2)}!`, 'success');
+        const result = await paymentResponse.json();
+        
+        if (paymentResponse.ok && result.success) {
+            showNotification(result.message || `Successfully subscribed to ${featureName} for $${monthlyPrice.toFixed(2)}!`, 'success');
             
             // Refresh subscription data and update UI
             await loadSubscriptions();
         } else {
-            const errorText = await paymentResponse.text();
-            throw new Error(`Payment failed: ${errorText}`);
+            throw new Error(`Payment failed: ${result.message}`);
         }
         
     } catch (error) {
@@ -1087,13 +1110,13 @@ async function handleFileUpload(e) {
             body: formData
         });
         
-        if (response.ok) {
-            const result = await response.json();
-            showNotification('File uploaded successfully!', 'success');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'File uploaded successfully!', 'success');
             hideFileUpload();
         } else {
-            const error = await response.text();
-            showNotification(error || 'Failed to upload file', 'error');
+            showNotification(result.message || 'Failed to upload file', 'error');
         }
     } catch (error) {
         showNotification('Error uploading file', 'error');
@@ -1147,6 +1170,14 @@ function showModal(modalId) {
     if (modal) {
         modal.style.display = 'flex';
         modal.classList.add('show');
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 

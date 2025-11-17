@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Core.Interfaces;
 using Core.Dtos;
 using Core.Enums;
+using Api.Models;
 
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class FilesController : ControllerBase
+    public class FilesController : BaseApiController
     {
         private readonly IFileService _fileService;
         private readonly ISubscriptionService _subscriptionService;
@@ -25,26 +26,28 @@ namespace Api.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile(IFormFile file, [FromForm] string? description = null)
         {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("No file uploaded.");
-            }
-
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized();
-            }
-
-            // Check if user has File Sharing subscription
-            var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
-            if (!hasFileSharing)
-            {
-                return StatusCode(403, "File sharing feature requires a subscription. Please subscribe to the File Sharing plan.");
-            }
-
+            var userId = 0; // Initialize to avoid scope issues
             try
             {
+                // Validate authentication
+                var authError = ValidateUserAuth(out userId);
+                if (authError != null) return authError;
+
+                // Validate file upload
+                if (file == null || file.Length == 0)
+                    return Error("Please select a file to upload.", 400, "NO_FILE");
+
+                if (file.Length > 50 * 1024 * 1024) // 50MB limit
+                    return Error("File size cannot exceed 50MB.", 400, "FILE_TOO_LARGE");
+
+                // Check if user has File Sharing subscription
+                var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
+                if (!hasFileSharing)
+                {
+                    return Error("File sharing feature requires an active subscription.", 403, "SUBSCRIPTION_REQUIRED", 
+                        new List<string> { "Please subscribe to the File Sharing plan to upload files." });
+                }
+
                 // Determine file type based on extension
                 var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 var fileType = extension switch
@@ -56,7 +59,6 @@ namespace Api.Controllers
                     _ => FileType.Other
                 };
 
-               
                 _logger.LogInformation("File upload validation - Name: {FileName}, Size: {FileSize}, ContentType: {ContentType}, DetectedType: {FileType}",
                     file.FileName, file.Length, file.ContentType, fileType);
 
@@ -65,7 +67,7 @@ namespace Api.Controllers
                 {
                     _logger.LogWarning("File validation failed - Name: {FileName}, Size: {FileSize}, Type: {FileType}",
                         file.FileName, file.Length, fileType);
-                    return BadRequest("Invalid file type or size.");
+                    return Error("Invalid file type or size. Please check our supported file formats.", 400, "INVALID_FILE");
                 }
 
                 // Convert IFormFile to byte array
@@ -88,95 +90,106 @@ namespace Api.Controllers
 
                 var result = await _fileService.UploadFileAsync(uploadRequest, userId);
 
-                return Ok(new
+                var responseData = new
                 {
-                    url = result.FileUrl,
-                    filename = result.FileName,
-                    size = result.FileSize,
-                    contentType = result.ContentType,
-                    uploadedAt = result.UploadedAt,
-                    message = "File uploaded successfully"
-                });
+                    Url = result.FileUrl,
+                    FileName = result.FileName,
+                    Size = result.FileSize,
+                    ContentType = result.ContentType,
+                    UploadedAt = result.UploadedAt,
+                    Description = description
+                };
+
+                return Success(responseData, "File uploaded successfully.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uploading file for user {UserId}", userId);
-                return StatusCode(500, "An error occurred while uploading the file.");
+                return HandleException(ex, "Failed to upload file");
             }
         }
         [HttpGet("download")]
         public async Task<IActionResult> DownloadFile([FromQuery] string fileUrl)
         {
-            if (string.IsNullOrEmpty(fileUrl))
-            {
-                return BadRequest("File URL is required.");
-            }
-
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized();
-            }
-
-            var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
-            if (!hasFileSharing)
-            {
-                return StatusCode(403, "File sharing feature requires a subscription. Please subscribe to the File Sharing plan.");
-            }
-
+            var userId = 0;
             try
             {
+                // Validate authentication
+                var authError = ValidateUserAuth(out userId);
+                if (authError != null) return authError;
+
+                // Validate file URL
+                var validationError = ValidateRequired((fileUrl, "fileUrl"));
+                if (validationError != null) return validationError;
+
+                // Check if user has File Sharing subscription
+                var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
+                if (!hasFileSharing)
+                {
+                    return Error("File sharing feature requires an active subscription.", 403, "SUBSCRIPTION_REQUIRED");
+                }
+
                 var fileData = await _fileService.DownloadFileAsync(fileUrl, userId);
                 if (fileData == null || fileData.Length == 0)
                 {
-                    return NotFound("File not found.");
+                    return Error("File not found or access denied.", 404, "FILE_NOT_FOUND");
                 }
 
                 var fileName = Path.GetFileName(fileUrl) ?? "downloaded_file";
-
                 return File(fileData, "application/octet-stream", fileName);
+            }
+            catch (FileNotFoundException)
+            {
+                return Error("The requested file was not found.", 404, "FILE_NOT_FOUND");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Error("You don't have permission to access this file.", 403, "ACCESS_DENIED");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error downloading file {FileUrl} for user {UserId}", fileUrl, userId);
-                return StatusCode(500, "An error occurred while downloading the file.");
+                return HandleException(ex, "Failed to download file");
             }
         }
 
         [HttpDelete]
         public async Task<IActionResult> DeleteFile([FromQuery] string fileUrl)
         {
-            if (string.IsNullOrEmpty(fileUrl))
-            {
-                return BadRequest("File URL is required.");
-            }
-
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized();
-            }
-
-            var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
-            if (!hasFileSharing)
-            {
-                return StatusCode(403, "File sharing feature requires a subscription. Please subscribe to the File Sharing plan.");
-            }
-
+            var userId = 0;
             try
             {
+                // Validate authentication
+                var authError = ValidateUserAuth(out userId);
+                if (authError != null) return authError;
+
+                // Validate file URL
+                var validationError = ValidateRequired((fileUrl, "fileUrl"));
+                if (validationError != null) return validationError;
+
+                // Check if user has File Sharing subscription
+                var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
+                if (!hasFileSharing)
+                {
+                    return Error("File sharing feature requires an active subscription.", 403, "SUBSCRIPTION_REQUIRED");
+                }
+
                 var deleted = await _fileService.DeleteFileAsync(fileUrl, userId);
                 if (!deleted)
                 {
-                    return NotFound("File not found or access denied.");
+                    return Error("File not found or you don't have permission to delete it.", 404, "FILE_NOT_FOUND");
                 }
 
-                return Ok(new { message = "File deleted successfully" });
+                return Success("File deleted successfully.");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Error("You don't have permission to delete this file.", 403, "ACCESS_DENIED");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting file {FileUrl} for user {UserId}", fileUrl, userId);
-                return StatusCode(500, "An error occurred while deleting the file.");
+                return HandleException(ex, "Failed to delete file");
             }
         }
     }

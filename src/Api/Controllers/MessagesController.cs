@@ -1,5 +1,6 @@
 using Core.Dtos;
 using Core.Interfaces;
+using Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class MessagesController : ControllerBase
+    public class MessagesController : BaseApiController
     {
         private readonly IMessageService _messageService;
 
@@ -22,57 +23,94 @@ namespace Api.Controllers
         {
             try
             {
-                if (request is null)
-                    return BadRequest("Request cannot be null.");
+                // Validate authentication
+                var authError = ValidateUserAuth(out var senderId);
+                if (authError != null) return authError;
 
-                if (string.IsNullOrWhiteSpace(request.Content))
-                    return BadRequest("Message content cannot be empty.");
+                // Validate request
+                var validationError = ValidateRequired(
+                    (request, "request"),
+                    (request?.Content, "content")
+                );
+                if (validationError != null) return validationError;
 
-                var senderIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(senderIdClaim, out var senderId))
-                    return Unauthorized();
+                // Additional validations
+                if (string.IsNullOrWhiteSpace(request!.Content))
+                    return Error("Message content cannot be empty.", 400, "EMPTY_CONTENT");
 
-                // Validate sending to self
+                if (request.Content.Length > 1000)
+                    return Error("Message content cannot exceed 1000 characters.", 400, "CONTENT_TOO_LONG");
+
+                // Validate not sending to self
                 if (request.ReceiverId.HasValue && request.ReceiverId.Value == senderId)
-                    return BadRequest("Cannot send message to yourself");
+                    return Error("You cannot send a message to yourself.", 400, "SELF_MESSAGE");
 
                 var message = await _messageService.SendAsync(senderId, request);
-                return Ok(message);
+                return Success(message, "Message sent successfully.");
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return Error($"Invalid message data: {ex.Message}", 400, "INVALID_MESSAGE_DATA");
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Forbid(ex.Message);
+                return Error($"Access denied: {ex.Message}", 403, "ACCESS_DENIED");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return HandleException(ex, "Failed to send message");
             }
         }
 
         [HttpGet("inbox")]
         public async Task<IActionResult> GetInbox([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out var userId))
-                return Unauthorized();
+            try
+            {
+                // Validate authentication
+                var authError = ValidateUserAuth(out var userId);
+                if (authError != null) return authError;
 
-            var inbox = await _messageService.GetInboxAsync(userId, page, pageSize);
-            return Ok(inbox);
+                // Validate pagination parameters
+                if (page < 1)
+                    return Error("Page number must be greater than 0.", 400, "INVALID_PAGE");
+
+                if (pageSize < 1 || pageSize > 100)
+                    return Error("Page size must be between 1 and 100.", 400, "INVALID_PAGE_SIZE");
+
+                var inbox = await _messageService.GetInboxAsync(userId, page, pageSize);
+                return Success(inbox, $"Retrieved {inbox.Items.Count} messages from your inbox.");
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, "Failed to retrieve inbox messages");
+            }
         }
 
         [HttpPost("{id}/read")]
         public async Task<IActionResult> MarkAsRead([FromRoute] int id)
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out var userId))
-                return Unauthorized();
+            try
+            {
+                // Validate authentication
+                var authError = ValidateUserAuth(out var userId);
+                if (authError != null) return authError;
 
-            await _messageService.MarkAsReadAsync(userId, id);
-            return NoContent();
+                // Validate message ID
+                if (id <= 0)
+                    return Error("Invalid message ID.", 400, "INVALID_MESSAGE_ID");
+
+                await _messageService.MarkAsReadAsync(userId, id);
+                return Success("Message marked as read.");
+            }
+            catch (ArgumentException ex) when (ex.Message.Contains("not found"))
+            {
+                return Error("Message not found or you don't have permission to access it.", 404, "MESSAGE_NOT_FOUND");
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, "Failed to mark message as read");
+            }
         }
     }
 }
