@@ -131,7 +131,7 @@
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
-              "version": "[9.0.10, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.Extensions.Hosting": {
               "target": "Package",

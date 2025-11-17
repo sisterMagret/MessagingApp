@@ -89,10 +89,10 @@ namespace Api.Controllers
                     return Error("Duration must be between 1 and 24 months.", 400, "INVALID_DURATION");
 
                 var amount = _paymentService.CalculateAmount(feature, months);
-                var priceData = new 
-                { 
-                    Feature = feature.ToString(), 
-                    Months = months, 
+                var priceData = new
+                {
+                    Feature = feature.ToString(),
+                    Months = months,
                     MonthlyPrice = amount / months,
                     TotalAmount = amount,
                     Currency = "USD"

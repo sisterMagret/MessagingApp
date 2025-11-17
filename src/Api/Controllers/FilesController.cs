@@ -44,7 +44,7 @@ namespace Api.Controllers
                 var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
                 if (!hasFileSharing)
                 {
-                    return Error("File sharing feature requires an active subscription.", 403, "SUBSCRIPTION_REQUIRED", 
+                    return Error("File sharing feature requires an active subscription.", 403, "SUBSCRIPTION_REQUIRED",
                         new List<string> { "Please subscribe to the File Sharing plan to upload files." });
                 }
 

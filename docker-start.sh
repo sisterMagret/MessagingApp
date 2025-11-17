@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Starting MessagingApp with SQL Server..."
+echo "Starting MessagingApp with SQL Server...."
 
 # Function to check if Docker is running
 check_docker() {

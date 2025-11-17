@@ -109,7 +109,7 @@ MessagingApp/
 - **Authentication**: JWT Bearer tokens
 - **API Documentation**: Swagger/OpenAPI 3.0
 - **Containerization**: Docker & Docker Compose
-- **Testing**: xUnit, Integration tests
+- **Testing**: xUnit
 - **Frontend**: Vanilla JavaScript SPA
 
 ## Prerequisites

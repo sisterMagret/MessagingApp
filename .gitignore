@@ -420,10 +420,6 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Docker
-.dockerignore
-Dockerfile
-docker-compose*.yml
 
 # Environment variables
 .env
