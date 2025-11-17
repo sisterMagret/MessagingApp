@@ -1,12 +1,13 @@
-using Core.Interfaces;
+using Core.Contracts;
 
-namespace Infrastructure.Email;
-
-public class ConsoleEmailSender : IEmailSender
+namespace Infrastructure.Email
 {
-    public Task SendAsync(string to, string subject, string body)
+    public class ConsoleEmailSender : IEmailSender
     {
-        Console.WriteLine($"[Email] To: {to}, Subject: {subject}, Body: {body}");
-        return Task.CompletedTask;
+        public Task SendEmailAsync(string to, string subject, string body)
+        {
+            Console.WriteLine($"Email to {to}: {subject} - {body}");
+            return Task.CompletedTask;
+        }
     }
 }

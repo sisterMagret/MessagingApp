@@ -46,21 +46,26 @@ namespace Infrastructure.Services
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
-                throw new Exception("Invalid credentials.");
+                throw new UnauthorizedAccessException("Invalid credentials.");
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (result == PasswordVerificationResult.Failed)
-                throw new Exception("Invalid credentials.");
+                throw new UnauthorizedAccessException("Invalid credentials.");
 
             return GenerateToken(user);
+        }
+
+        public async Task<User?> FindUserByEmailAsync(string email)
+        {
+            return await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
         private AuthResponse GenerateToken(User user)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim("sub", user.Id.ToString()),
+                new Claim("email", user.Email)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));

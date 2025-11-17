@@ -46,7 +46,11 @@
           "dependencies": {
             "FluentValidation": {
               "target": "Package",
-              "version": "[12.1.0, )"
+              "version": "[11.11.0, )"
+            },
+            "Microsoft.AspNetCore.Http": {
+              "target": "Package",
+              "version": "[2.2.2, )"
             }
           },
           "imports": [
@@ -113,6 +117,10 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Http.Features": {
+              "target": "Package",
+              "version": "[5.0.17, )"
+            },
             "Microsoft.AspNetCore.Identity": {
               "target": "Package",
               "version": "[2.3.1, )"
@@ -125,9 +133,17 @@
               "target": "Package",
               "version": "[9.0.10, )"
             },
-            "Microsoft.IdentityModel.Tokens": {
+            "Microsoft.Extensions.Hosting": {
               "target": "Package",
-              "version": "[8.14.0, )"
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.2.1, )"
             }
           },
           "imports": [

@@ -1,5 +1,12 @@
+using Core.Dtos;
 
-public interface IEmailSender
+namespace Core.Interfaces
 {
-    Task SendAsync(string to, string subject, string body);
+    public interface IMessageService
+    {
+        Task<MessageDto> SendAsync(int senderId, MessageCreateRequest request);
+        Task<PagedResult<MessageDto>> GetInboxAsync(int userId, int page, int pageSize);
+        Task MarkAsReadAsync(int userId, int messageId);
+        Task<List<MessageDto>> GetGroupMessagesAsync(int groupId, int userId);
+    }
 }

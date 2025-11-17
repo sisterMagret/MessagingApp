@@ -1,14 +1,25 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Core.Entities
 {
     public class Message
     {
         public int Id { get; set; }
-        public string Content { get; set; } = default!;
-        public bool IsRead { get; set; } = false;
-        public DateTime SentAt { get; set; } = DateTime.UtcNow;
         public int SenderId { get; set; }
-        public User Sender { get; set; } = default!;
-        public int ReceiverId { get; set; }
-        public User Receiver { get; set; } = default!;
+        public int? ReceiverId { get; set; }
+        public int? GroupId { get; set; }
+
+        [Required, MaxLength(2000)]
+        public string Content { get; set; } = string.Empty;
+        public string? FileUrl { get; set; }
+        public string? VoiceUrl { get; set; }
+        public DateTime SentAt { get; set; } = DateTime.UtcNow;
+        public bool IsRead { get; set; } = false;
+        public DateTime? LastNotifiedAt { get; set; }
+
+        // Navigation properties
+        public virtual User Sender { get; set; } = null!;
+        public virtual User? Receiver { get; set; }
+        public virtual Group? Group { get; set; }
     }
 }

@@ -4,7 +4,8 @@ namespace Core.Enums;
 public enum FeatureType
 {
     None = 0,
-    VoiceMessages = 1,
+    VoiceMessage = 1,
     FileSharing = 2,
-    GroupChats = 4
+    GroupChat = 4,
+    EmailAlerts = 5
 }
