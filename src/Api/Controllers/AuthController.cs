@@ -15,15 +15,48 @@ namespace Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            var result = await _authService.RegisterAsync(request);
-            return Ok(result);
+            try
+            {
+                // Basic validation
+                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+                    return BadRequest("Email and password are required");
+
+                if (!request.Email.Contains("@"))
+                    return BadRequest("Invalid email format");
+
+                var result = await _authService.RegisterAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex) when (ex.Message.Contains("Email already exists"))
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var result = await _authService.LoginAsync(request);
-            return Ok(result);
+            try
+            {
+                // Basic validation
+                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+                    return BadRequest("Email and password are required");
+
+                var result = await _authService.LoginAsync(request);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet("me")]
@@ -50,7 +83,7 @@ namespace Api.Controllers
                 return NotFound("User not found");
             }
 
-            return Ok(new { UserId = user.Id, Email = user.Email });
+            return Ok(new { UserId = user.Id, user.Email });
         }
     }
 }

@@ -23,6 +23,9 @@ namespace Infrastructure.Services
 
         public async Task<FileUploadResponse> UploadFileAsync(FileUploadRequest request, int userId)
         {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
             if (!await ValidateFileAsync(CreateFormFile(request), request.FileType))
                 throw new ArgumentException("Invalid file");
 
@@ -92,13 +95,18 @@ namespace Infrastructure.Services
 
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
+            // Always reject dangerous file types regardless of specified type
+            var dangerousExtensions = new[] { ".exe", ".bat", ".cmd", ".scr", ".vbs", ".js", ".jar" };
+            if (dangerousExtensions.Contains(extension))
+                return false;
+
             return fileType switch
             {
                 FileType.Image => _allowedImageTypes.Contains(extension),
                 FileType.Document => _allowedDocumentTypes.Contains(extension),
                 FileType.Audio => _allowedAudioTypes.Contains(extension),
                 FileType.Video => extension == ".mp4",
-                FileType.Other => true,
+                FileType.Other => true, // Allow other safe file types
                 _ => false
             };
         }

@@ -254,7 +254,7 @@ static async Task SeedDemoData(MessagingDbContext context)
         new Core.Entities.User
         {
             Email = "sistermagret@gmail.com",
-            PasswordHash = passwordHasher.HashPassword(null!, "icui4cu2go"),
+            PasswordHash = passwordHasher.HashPassword(null!, "adminpassword"),
             CreatedAt = DateTime.UtcNow
         }
     };

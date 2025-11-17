@@ -15,7 +15,6 @@ namespace Core.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoginAt { get; set; }
         
-        // Navigation properties
         public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
         public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
         public virtual ICollection<GroupMember> GroupMemberships { get; set; } = new List<GroupMember>();

@@ -198,7 +198,7 @@ namespace Infrastructure.Services
                     SenderId = m.SenderId,
                     ReceiverId = m.ReceiverId,
                     GroupId = m.GroupId,
-                    SenderEmail = m.Sender.Email, // Now safe because we included it
+                    SenderEmail = m.Sender.Email,
                     Content = m.Content,
                     FileUrl = m.FileUrl ?? string.Empty,
                     VoiceUrl = m.VoiceUrl ?? string.Empty,

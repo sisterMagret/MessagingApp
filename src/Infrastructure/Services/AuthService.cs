@@ -64,7 +64,7 @@ namespace Infrastructure.Services
         {
             var claims = new[]
             {
-                new Claim("sub", user.Id.ToString()), // Use "sub" (subject) standard claim
+                new Claim("sub", user.Id.ToString()),
                 new Claim("email", user.Email)
             };
 

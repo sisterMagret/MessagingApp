@@ -31,4 +31,8 @@
     <ProjectReference Include="..\Api\Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Integration.disabled/**" />
+  </ItemGroup>
+
 </Project>

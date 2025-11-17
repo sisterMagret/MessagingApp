@@ -73,7 +73,6 @@ namespace Api.Controllers
             if (!int.TryParse(currentUserIdClaim, out var currentUserId))
                 return Unauthorized();
 
-            // Check if user has Group Chat subscription
             var hasGroupChat = await _subscriptionService.HasActiveFeatureAsync(currentUserId, FeatureType.GroupChat);
             if (!hasGroupChat)
             {
@@ -102,7 +101,6 @@ namespace Api.Controllers
             if (!int.TryParse(currentUserIdClaim, out var currentUserId))
                 return Unauthorized();
 
-            // Check if user has Group Chat subscription
             var hasGroupChat = await _subscriptionService.HasActiveFeatureAsync(currentUserId, FeatureType.GroupChat);
             if (!hasGroupChat)
             {
@@ -131,7 +129,6 @@ namespace Api.Controllers
             if (!int.TryParse(currentUserIdClaim, out var currentUserId))
                 return Unauthorized();
 
-            // Check if user has Group Chat subscription
             var hasGroupChat = await _subscriptionService.HasActiveFeatureAsync(currentUserId, FeatureType.GroupChat);
             if (!hasGroupChat)
             {

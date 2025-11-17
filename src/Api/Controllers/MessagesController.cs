@@ -17,25 +17,42 @@ namespace Api.Controllers
             _messageService = messageService;
         }
 
-        // POST api/messages
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] MessageCreateRequest request)
         {
-            if (request is null)
-                return BadRequest("Request cannot be null.");
+            try
+            {
+                if (request is null)
+                    return BadRequest("Request cannot be null.");
 
-            if (string.IsNullOrWhiteSpace(request.Content))
-                return BadRequest("Message content cannot be empty.");
+                if (string.IsNullOrWhiteSpace(request.Content))
+                    return BadRequest("Message content cannot be empty.");
 
-            var senderIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(senderIdClaim, out var senderId))
-                return Unauthorized();
+                var senderIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(senderIdClaim, out var senderId))
+                    return Unauthorized();
 
-            var message = await _messageService.SendAsync(senderId, request);
-            return Ok(message);
+                // Validate sending to self
+                if (request.ReceiverId.HasValue && request.ReceiverId.Value == senderId)
+                    return BadRequest("Cannot send message to yourself");
+
+                var message = await _messageService.SendAsync(senderId, request);
+                return Ok(message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
-        // GET api/messages/inbox?page=1&pageSize=50
         [HttpGet("inbox")]
         public async Task<IActionResult> GetInbox([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
@@ -47,7 +64,6 @@ namespace Api.Controllers
             return Ok(inbox);
         }
 
-        // POST api/messages/{id}/read
         [HttpPost("{id}/read")]
         public async Task<IActionResult> MarkAsRead([FromRoute] int id)
         {

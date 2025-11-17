@@ -56,11 +56,10 @@ namespace Api.Controllers
                     _ => FileType.Other
                 };
 
-                // Debug logging
+               
                 _logger.LogInformation("File upload validation - Name: {FileName}, Size: {FileSize}, ContentType: {ContentType}, DetectedType: {FileType}",
                     file.FileName, file.Length, file.ContentType, fileType);
 
-                // Validate file
                 var isValid = await _fileService.ValidateFileAsync(file, fileType);
                 if (!isValid)
                 {
@@ -119,7 +118,6 @@ namespace Api.Controllers
                 return Unauthorized();
             }
 
-            // Check if user has File Sharing subscription
             var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
             if (!hasFileSharing)
             {
@@ -134,7 +132,6 @@ namespace Api.Controllers
                     return NotFound("File not found.");
                 }
 
-                // Extract filename from URL or use a default
                 var fileName = Path.GetFileName(fileUrl) ?? "downloaded_file";
 
                 return File(fileData, "application/octet-stream", fileName);
@@ -160,7 +157,6 @@ namespace Api.Controllers
                 return Unauthorized();
             }
 
-            // Check if user has File Sharing subscription
             var hasFileSharing = await _subscriptionService.HasActiveFeatureAsync(userId, FeatureType.FileSharing);
             if (!hasFileSharing)
             {
