@@ -12,11 +12,11 @@ services:
       - sqlserver_data:/var/opt/mssql
     restart: unless-stopped
     healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "MessagingApp123!" -Q "SELECT 1" || exit 1
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/1433"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 40s
 
   messagingapp-api:
     build:
