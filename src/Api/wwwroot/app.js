@@ -9,8 +9,8 @@ let signalRConnection = null;
 let userSubscriptions = {};
 
 // API Configuration
-// Always use absolute URL to ensure API calls go to the correct port
-const API_BASE = 'http://localhost:5250/api';
+// Use configuration from config.js (set via environment variable at runtime)
+const API_BASE = window.APP_CONFIG?.API_BASE_URL || 'http://34.242.41.55:5250/api';
 const PAGE_SIZE = 10;
 
 // Initialize Application

@@ -135,7 +135,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",
                 "http://127.0.0.1:5500",
                 "http://localhost:5500",
-                "http://localhost:5250"
+                "http://localhost:5250",
+                "http://34.242.41.55:5250"
               )
               .AllowAnyHeader()
               .AllowAnyMethod()
@@ -219,6 +220,20 @@ app.MapFallbackToFile("index.html");
 
 app.MapControllers();
 app.MapHub<MessageHub>("/messageHub");
+
+// Serve dynamic config.js based on environment variables
+app.MapGet("/config.js", (IConfiguration config, IWebHostEnvironment env) =>
+{
+    var apiBaseUrl = config["APP_API_BASE_URL"] ??
+                     (env.IsDevelopment() ? "http://34.242.41.55:5250/api" : "http://34.242.41.55:5250/api");
+
+    var configScript = $@"// Configuration loaded from server
+window.APP_CONFIG = {{
+    API_BASE_URL: '{apiBaseUrl}'
+}};";
+
+    return Results.Content(configScript, "application/javascript");
+});
 
 app.Run();
 
