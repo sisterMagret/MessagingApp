@@ -16,7 +16,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 40s
+      start_period: 40s 
 
   messagingapp-api:
     build:
@@ -26,7 +26,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MessagingAppDb;User Id=sa;Password=MessagingApp123!;TrustServerCertificate=true;MultipleActiveResultSets=true;
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=MessagingAppDb;User Id=sa;Password=MessagingApp123!;TrustServerCertificate=true;
+      - APP_API_BASE_URL=http://34.242.41.55:5250/api
     ports:
       - "5250:80"
     depends_on:
